@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8090
 
 spring:
   application:
@@ -49,6 +49,10 @@ spring:
           uri: lb://exam-service
           predicates:
             - Path=/api/exam-results/**
+        - id: exam-drafts
+          uri: lb://exam-service
+          predicates:
+            - Path=/api/exam-drafts/**
         - id: training-enrollments
           uri: lb://training-service
           predicates:

@@ -17,6 +17,7 @@ public class ExamResultService {
     private final ExamRepository examRepository;
     private final QuestionRepository questionRepository;
     private final ExamEnrollmentRepository examEnrollmentRepository;
+    private final ExamDraftService examDraftService;
 
     @Transactional
     public ExamResultResponse submitExam(ExamSubmissionDTO request) {
@@ -80,6 +81,9 @@ public class ExamResultService {
         ExamResult savedResult = examResultRepository.save(result);
         
         System.out.println("Result saved with ID: " + savedResult.getId());
+        
+        // Supprimer le brouillon après soumission
+        examDraftService.deleteDraft(exam.getId(), request.getUserId());
         
         // Marquer l'enrollment comme complété
         examEnrollmentRepository.findByUserIdAndExamId(request.getUserId(), exam.getId())
@@ -148,6 +152,31 @@ public class ExamResultService {
         return examResultRepository.findByExamId(examId).stream()
                 .map(this::mapToResultResponse)
                 .collect(Collectors.toList());
+    }
+
+    public ExamResultResponse getResultById(Long resultId) {
+        ExamResult result = examResultRepository.findById(resultId)
+                .orElseThrow(() -> new RuntimeException("Result not found"));
+        return mapToResultResponse(result);
+    }
+
+    public List<UserAnswerResponse> getUserAnswers(Long resultId) {
+        ExamResult result = examResultRepository.findById(resultId)
+                .orElseThrow(() -> new RuntimeException("Result not found"));
+        
+        return result.getUserAnswers().stream()
+                .map(this::mapToUserAnswerResponse)
+                .collect(Collectors.toList());
+    }
+
+    private UserAnswerResponse mapToUserAnswerResponse(UserAnswer userAnswer) {
+        UserAnswerResponse response = new UserAnswerResponse();
+        response.setId(userAnswer.getId());
+        response.setQuestionId(userAnswer.getQuestionId());
+        response.setSelectedAnswer(userAnswer.getAnswer());
+        response.setIsCorrect(userAnswer.getIsCorrect());
+        response.setMarksObtained(userAnswer.getMarksObtained());
+        return response;
     }
 
     private boolean checkAnswer(Question question, ExamSubmissionDTO.AnswerDTO answerDTO) {

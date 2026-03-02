@@ -33,7 +33,7 @@ export interface AuthResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8080/api/auth';
+  private apiUrl = 'http://localhost:8090/api/auth';
 
   constructor(
     private http: HttpClient,
@@ -58,10 +58,16 @@ export class AuthService {
     );
   }
 
-  logout(): void {
+  logout(redirectTo?: string): void {
     localStorage.removeItem('token');
     localStorage.removeItem('userInfo');
-    this.router.navigate(['/']);
+    
+    // Si une URL de redirection est spécifiée, l'utiliser, sinon aller à la page d'accueil
+    if (redirectTo) {
+      this.router.navigate([redirectTo]);
+    } else {
+      this.router.navigate(['/']);
+    }
   }
 
   private saveToken(token: string): void {

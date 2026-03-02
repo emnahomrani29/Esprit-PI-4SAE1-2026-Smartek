@@ -70,7 +70,23 @@ export class CourseManagementComponent implements OnInit {
 
   loadCourses(): void {
     this.loading = true;
-    if (this.currentUserId) {
+    const userInfo = this.authService.getUserInfo();
+    const isAdmin = userInfo?.role === 'ADMIN';
+    
+    if (isAdmin) {
+      // ADMIN voit tous les cours
+      this.courseService.getAllCourses().subscribe({
+        next: (courses) => {
+          this.courses = courses;
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error loading courses:', error);
+          this.loading = false;
+        }
+      });
+    } else if (this.currentUserId) {
+      // Les autres voient uniquement leurs cours
       this.courseService.getCoursesByTrainer(this.currentUserId).subscribe({
         next: (courses) => {
           this.courses = courses;

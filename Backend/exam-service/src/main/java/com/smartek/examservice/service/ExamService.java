@@ -8,6 +8,11 @@ import com.smartek.examservice.dto.*;
 import com.smartek.examservice.entity.*;
 import com.smartek.examservice.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
@@ -24,6 +29,7 @@ public class ExamService {
     private final TrainingClient trainingClient;
 
     @Transactional
+    @CacheEvict(value = {"exams", "examsByCourse"}, allEntries = true)
     public ExamResponse createExam(ExamRequest request) {
         // Calculer totalMarks automatiquement si des questions sont fournies
         Integer totalMarks = request.getTotalMarks();
@@ -78,28 +84,54 @@ public class ExamService {
         return mapToResponse(savedExam);
     }
 
+    @Cacheable(value = "exams", unless = "#result.isEmpty()")
     public List<ExamResponse> getAllExams() {
         return examRepository.findAll().stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
+    
+    public Page<ExamResponse> getAllExamsPaginated(Pageable pageable) {
+        return examRepository.findAll(pageable)
+                .map(this::mapToResponse);
+    }
 
+    @Cacheable(value = "examsByCourse", key = "#courseId")
     public List<ExamResponse> getExamsByCourse(Long courseId) {
         return examRepository.findByCourseId(courseId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "exam", key = "#id")
     public ExamResponse getExamById(Long id) {
-        Exam exam = examRepository.findById(id)
+        Exam exam = examRepository.findByIdWithQuestions(id)
                 .orElseThrow(() -> new RuntimeException("Exam not found"));
         return mapToResponseWithQuestions(exam);
     }
 
     @Transactional
+    @CachePut(value = "exam", key = "#id")
+    @CacheEvict(value = {"exams", "examsByCourse"}, allEntries = true)
     public ExamResponse updateExam(Long id, ExamRequest request) {
         Exam exam = examRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Exam not found"));
+        
+        // Mettre à jour les champs de base
+        exam.setCourseId(request.getCourseId());
+        exam.setTrainingId(request.getTrainingId());
+        if (request.getExamType() != null) {
+            exam.setExamType(request.getExamType());
+        }
+        exam.setTitle(request.getTitle());
+        exam.setDescription(request.getDescription());
+        exam.setDuration(request.getDuration());
+        exam.setPassingScore(request.getPassingScore());
+        exam.setStartDate(request.getStartDate());
+        exam.setEndDate(request.getEndDate());
+        if (request.getIsActive() != null) {
+            exam.setIsActive(request.getIsActive());
+        }
         
         // Calculer totalMarks automatiquement si des questions sont fournies
         Integer totalMarks = request.getTotalMarks();
@@ -108,9 +140,11 @@ public class ExamService {
                     .mapToInt(q -> q.getMarks() != null ? q.getMarks() : 0)
                     .sum();
             
-            // Supprimer les anciennes questions
+            // Supprimer les anciennes questions en utilisant orphanRemoval
             if (exam.getQuestions() != null) {
-                questionRepository.deleteAll(exam.getQuestions());
+                exam.getQuestions().clear();
+            } else {
+                exam.setQuestions(new ArrayList<>());
             }
             
             // Créer les nouvelles questions
@@ -135,34 +169,24 @@ public class ExamService {
                     question.setOptions(options);
                 }
                 
-                questionRepository.save(question);
+                exam.getQuestions().add(question);
             }
         }
         
-        exam.setCourseId(request.getCourseId());
-        exam.setTrainingId(request.getTrainingId());
-        if (request.getExamType() != null) {
-            exam.setExamType(request.getExamType());
-        }
-        exam.setTitle(request.getTitle());
-        exam.setDescription(request.getDescription());
-        exam.setDuration(request.getDuration());
-        exam.setPassingScore(request.getPassingScore());
         exam.setTotalMarks(totalMarks);
-        exam.setStartDate(request.getStartDate());
-        exam.setEndDate(request.getEndDate());
-        exam.setIsActive(request.getIsActive());
         
         Exam updatedExam = examRepository.save(exam);
         return mapToResponse(updatedExam);
     }
 
     @Transactional
+    @CacheEvict(value = {"exam", "exams", "examsByCourse"}, allEntries = true)
     public void deleteExam(Long id) {
         examRepository.deleteById(id);
     }
     
     @Transactional
+    @CacheEvict(value = {"exam", "exams", "examsByCourse"}, allEntries = true)
     public void deleteExamsByTrainingId(Long trainingId) {
         // Supprimer d'abord les enrollments
         examEnrollmentRepository.deleteByTrainingId(trainingId);
@@ -175,6 +199,7 @@ public class ExamService {
     }
     
     @Transactional
+    @CacheEvict(value = {"exam", "exams", "examsByCourse"}, allEntries = true)
     public void deleteQuizzesByCourseId(Long courseId) {
         // Supprimer d'abord les enrollments
         examEnrollmentRepository.deleteByCourseId(courseId);

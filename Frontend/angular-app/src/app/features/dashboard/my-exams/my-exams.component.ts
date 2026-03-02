@@ -352,4 +352,41 @@ export class MyExamsComponent implements OnInit {
     if (percentage >= exam.passingScore) return 'bg-green-50 border-green-200';
     return 'bg-red-50 border-red-200';
   }
+
+  getRemainingTimeFormatted(exam: Exam): string {
+    if (!exam.remainingTimeMinutes) return 'Pas de limite';
+    
+    const minutes = exam.remainingTimeMinutes;
+    
+    if (minutes <= 0) return 'Expiré';
+    if (minutes < 60) return `${minutes} min`;
+    
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    
+    if (hours < 24) {
+      return remainingMinutes > 0 
+        ? `${hours}h ${remainingMinutes}min` 
+        : `${hours}h`;
+    }
+    
+    const days = Math.floor(hours / 24);
+    const remainingHours = hours % 24;
+    
+    return remainingHours > 0 
+      ? `${days}j ${remainingHours}h` 
+      : `${days}j`;
+  }
+
+  getRemainingTimeColor(exam: Exam): string {
+    if (!exam.remainingTimeMinutes) return 'text-gray-600';
+    
+    const minutes = exam.remainingTimeMinutes;
+    
+    if (minutes <= 0) return 'text-red-600';
+    if (minutes < 60) return 'text-red-600'; // Moins d'1 heure
+    if (minutes < 1440) return 'text-orange-600'; // Moins d'1 jour
+    
+    return 'text-green-600';
+  }
 }

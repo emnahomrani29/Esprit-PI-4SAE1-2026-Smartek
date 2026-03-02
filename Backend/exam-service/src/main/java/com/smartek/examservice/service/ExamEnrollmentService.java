@@ -438,6 +438,22 @@ public class ExamEnrollmentService {
             response.setBestScore(null);
         }
         
+        // Calculer le temps restant avant la fin de l'examen
+        if (exam.getEndDate() != null) {
+            LocalDateTime now = LocalDateTime.now();
+            if (now.isBefore(exam.getEndDate())) {
+                // Calculer la différence en minutes
+                long minutesRemaining = java.time.Duration.between(now, exam.getEndDate()).toMinutes();
+                response.setRemainingTimeMinutes(minutesRemaining);
+            } else {
+                // L'examen est terminé
+                response.setRemainingTimeMinutes(0L);
+            }
+        } else {
+            // Pas de date de fin définie
+            response.setRemainingTimeMinutes(null);
+        }
+        
         return response;
     }
 }

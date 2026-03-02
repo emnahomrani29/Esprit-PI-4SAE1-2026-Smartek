@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar.component';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-dashboard-layout',
@@ -10,5 +11,9 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
   styleUrl: './dashboard-layout.component.scss'
 })
 export class DashboardLayoutComponent {
+  constructor(private authService: AuthService) {}
 
+  logout(): void {
+    this.authService.logout('/'); // Rediriger vers la page d'accueil après logout
+  }
 }

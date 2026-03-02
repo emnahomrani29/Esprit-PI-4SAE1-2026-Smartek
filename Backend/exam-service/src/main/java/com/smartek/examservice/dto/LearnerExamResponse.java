@@ -27,4 +27,5 @@ public class LearnerExamResponse {
     private Boolean hasAttempted; // true si le learner a déjà passé cet examen
     private Integer bestScore; // Meilleur score obtenu
     private Integer attemptsCount; // Nombre de tentatives
+    private Long remainingTimeMinutes; // Temps restant en minutes avant la fin de l'examen
 }

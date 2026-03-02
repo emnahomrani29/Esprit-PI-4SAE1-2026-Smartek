@@ -170,9 +170,22 @@ export class ExamManagementComponent implements OnInit {
     if (this.examForm.invalid) return;
 
     this.loading = true;
-    const examData: Exam = {
-      ...this.examForm.value,
-      totalMarks: this.getTotalMarks() || this.examForm.value.totalMarks
+    const formValue = this.examForm.value;
+    
+    // Préparer les données pour le backend (ExamRequest)
+    const examData: any = {
+      courseId: formValue.courseId,
+      trainingId: formValue.trainingId,
+      examType: formValue.examType,
+      title: formValue.title,
+      description: formValue.description,
+      duration: formValue.duration,
+      passingScore: formValue.passingScore,
+      totalMarks: this.getTotalMarks() || formValue.totalMarks,
+      startDate: formValue.startDate,
+      endDate: formValue.endDate,
+      isActive: formValue.isActive,
+      questions: formValue.questions
     };
 
     const operation = this.isEditMode && this.selectedExamId

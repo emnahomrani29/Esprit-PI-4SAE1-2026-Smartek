@@ -207,14 +207,66 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   ],
 
   [Role.ADMIN]: [
+    // Course Management (FULL)
+    Permission.COURSES_VIEW,
+    Permission.COURSES_CREATE,
+    Permission.COURSES_EDIT,
+    Permission.COURSES_DELETE,
+    Permission.COURSES_ENROLL,
+    Permission.COURSES_PUBLISH,
+    Permission.COURSES_MANAGE_CONTENT,
+    Permission.COURSES_TEACH,
+    
+    // Exam Management (FULL)
+    Permission.EXAMS_VIEW,
+    Permission.EXAMS_CREATE,
+    Permission.EXAMS_EDIT,
+    Permission.EXAMS_DELETE,
+    Permission.EXAMS_TAKE,
+    Permission.EXAMS_VIEW_RESULTS,
+    Permission.EXAMS_VIEW_ALL_RESULTS,
+    Permission.EXAMS_GRADE,
+    
+    // Certification Management (FULL)
+    Permission.CERTIFICATIONS_VIEW,
+    Permission.CERTIFICATIONS_CREATE,
+    Permission.CERTIFICATIONS_EDIT,
+    Permission.CERTIFICATIONS_DELETE,
+    Permission.CERTIFICATIONS_ASSIGN,
+    
+    // Badge Management (FULL)
+    Permission.BADGES_VIEW,
+    Permission.BADGES_CREATE,
+    Permission.BADGES_EDIT,
+    Permission.BADGES_DELETE,
+    Permission.BADGES_ASSIGN,
+    
+    // Training Management (FULL)
+    Permission.TRAINING_VIEW,
+    Permission.TRAINING_CREATE,
+    Permission.TRAINING_EDIT,
+    Permission.TRAINING_DELETE,
+    Permission.TRAINING_ENROLL,
+    Permission.TRAINING_MANAGE_PARTICIPANTS,
+    Permission.TRAINING_MANAGE_ALL,
+    
+    // Skill Evidence Management (FULL)
+    Permission.SKILL_EVIDENCE_VIEW,
+    Permission.SKILL_EVIDENCE_UPLOAD,
+    Permission.SKILL_EVIDENCE_VIEW_ALL,
+    Permission.SKILL_EVIDENCE_VALIDATE,
+    Permission.SKILL_EVIDENCE_MANAGE,
+    
     // User Management (FULL)
     Permission.USERS_VIEW,
     Permission.USERS_CREATE,
     Permission.USERS_EDIT,
     Permission.USERS_DELETE,
     Permission.USERS_MANAGE_ROLES,
-    Permission.USERS_ACTIVATE_DEACTIVATE,
     Permission.USERS_VIEW_ALL_DATA,
+    Permission.USERS_VIEW_PROGRESS,
+    Permission.USERS_VIEW_PROFILES,
+    Permission.USERS_ACTIVATE_DEACTIVATE,
     Permission.USERS_EXPORT,
     
     // Company Management (FULL)
@@ -223,13 +275,44 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     Permission.COMPANIES_EDIT,
     Permission.COMPANIES_DELETE,
     Permission.COMPANIES_MANAGE_ALL,
+    Permission.COMPANY_VIEW,
+    Permission.COMPANY_EDIT,
     
-    // Contact Management (FULL)
-    Permission.CONTACTS_VIEW,
-    Permission.CONTACTS_CREATE,
-    Permission.CONTACTS_EDIT,
-    Permission.CONTACTS_DELETE,
-    Permission.CONTACTS_EXPORT,
+    // Interview Management (FULL)
+    Permission.INTERVIEWS_VIEW,
+    Permission.INTERVIEWS_CREATE,
+    Permission.INTERVIEWS_EDIT,
+    Permission.INTERVIEWS_DELETE,
+    Permission.INTERVIEWS_SCHEDULE,
+    Permission.INTERVIEWS_UPDATE_STATUS,
+    Permission.INTERVIEWS_VIEW_ALL,
+    Permission.INTERVIEWS_MANAGE,
+    
+    // Job Offers (FULL)
+    Permission.JOB_OFFERS_VIEW,
+    Permission.JOB_OFFERS_CREATE,
+    Permission.JOB_OFFERS_EDIT,
+    Permission.JOB_OFFERS_DELETE,
+    Permission.JOB_OFFERS_PUBLISH,
+    
+    // Planning (FULL)
+    Permission.PLANNING_VIEW,
+    Permission.PLANNING_CREATE,
+    Permission.PLANNING_EDIT,
+    Permission.PLANNING_DELETE,
+    Permission.PLANNING_VIEW_ALL,
+    Permission.PLANNING_MANAGE_ALL,
+    
+    // Event Management (FULL)
+    Permission.EVENTS_VIEW,
+    Permission.EVENTS_CREATE,
+    Permission.EVENTS_EDIT,
+    Permission.EVENTS_DELETE,
+    Permission.EVENTS_MANAGE,
+    Permission.EVENTS_MANAGE_PARTICIPANTS,
+    Permission.EVENTS_VIEW_ALL,
+    Permission.EVENTS_MANAGE_ALL,
+    Permission.EVENTS_VIEW_SPONSORED,
     
     // Sponsor Management (FULL)
     Permission.SPONSORS_VIEW,
@@ -238,22 +321,40 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     Permission.SPONSORS_DELETE,
     Permission.SPONSORS_MANAGE_ALL,
     
-    // Participation Management
+    // Contact Management (FULL)
+    Permission.CONTACTS_VIEW,
+    Permission.CONTACTS_CREATE,
+    Permission.CONTACTS_EDIT,
+    Permission.CONTACTS_DELETE,
+    Permission.CONTACTS_EXPORT,
+    
+    // Participation Management (FULL)
+    Permission.PARTICIPATION_VIEW,
+    Permission.PARTICIPATION_VIEW_OWN,
     Permission.PARTICIPATION_VIEW_ALL,
     Permission.PARTICIPATION_MANAGE,
     Permission.PARTICIPATION_EXPORT,
     
-    // System Settings
+    // Learning Path (FULL)
+    Permission.LEARNING_PATH_VIEW,
+    Permission.LEARNING_PATH_CREATE,
+    Permission.LEARNING_PATH_EDIT,
+    Permission.LEARNING_PATH_DELETE,
+    
+    // Offers (FULL)
+    Permission.OFFERS_VIEW,
+    Permission.OFFERS_CREATE,
+    Permission.OFFERS_EDIT,
+    
+    // Profile (FULL)
+    Permission.PROFILE_VIEW,
+    Permission.PROFILE_EDIT,
+    
+    // System Settings (FULL)
     Permission.SYSTEM_SETTINGS,
     Permission.SYSTEM_LOGS,
     Permission.SYSTEM_BACKUP,
-    
-    // Full Access
-    Permission.ADMIN_FULL_ACCESS,
-    
-    // Profile
-    Permission.PROFILE_VIEW,
-    Permission.PROFILE_EDIT
+    Permission.ADMIN_FULL_ACCESS
   ],
 
   [Role.SPONSOR]: [

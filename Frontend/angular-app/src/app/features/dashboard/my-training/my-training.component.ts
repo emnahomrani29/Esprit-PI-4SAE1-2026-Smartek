@@ -90,7 +90,12 @@ export class MyTrainingComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error unenrolling:', error);
-        alert('Erreur lors de la désinscription');
+        if (error.status === 404) {
+          alert('Cette inscription n\'existe plus. Actualisation de la liste...');
+          this.loadMyTrainings();
+        } else {
+          alert('Erreur lors de la désinscription: ' + (error.error?.message || 'Erreur inconnue'));
+        }
         this.isLoading = false;
       }
     });

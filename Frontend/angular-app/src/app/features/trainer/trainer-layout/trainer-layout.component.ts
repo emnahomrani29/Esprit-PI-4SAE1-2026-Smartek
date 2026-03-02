@@ -12,6 +12,7 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class TrainerLayoutComponent {
   userName: string = '';
+  isAcademicMenuOpen: boolean = false;
 
   constructor(
     private authService: AuthService,
@@ -19,6 +20,14 @@ export class TrainerLayoutComponent {
   ) {
     const userInfo = this.authService.getUserInfo();
     this.userName = userInfo?.firstName || 'Formateur';
+  }
+
+  toggleAcademicMenu() {
+    this.isAcademicMenuOpen = !this.isAcademicMenuOpen;
+  }
+
+  closeAcademicMenu() {
+    this.isAcademicMenuOpen = false;
   }
 
   logout() {

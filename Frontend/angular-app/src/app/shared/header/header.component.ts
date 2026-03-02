@@ -17,6 +17,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   navbarOpen = false;
   sticky = false;
   userMenuOpen = false;
+  academicMenuOpen = false;
   currentUser: AuthResponse | null = null;
 
   constructor(
@@ -90,6 +91,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
     if (this.userMenuOpen && !target.closest('.user-menu-container')) {
       this.userMenuOpen = false;
     }
+    if (this.academicMenuOpen && !target.closest('.academic-menu-container')) {
+      this.academicMenuOpen = false;
+    }
   }
 
   handleScroll(): void {
@@ -102,6 +106,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   toggleUserMenu(): void {
     this.userMenuOpen = !this.userMenuOpen;
+  }
+
+  toggleAcademicMenu(): void {
+    this.academicMenuOpen = !this.academicMenuOpen;
   }
 
   openSignIn(): void {
@@ -126,7 +134,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   logout(): void {
     this.userMenuOpen = false;
-    this.authService.logout();
+    this.authService.logout('/'); // Rediriger vers la page d'accueil (frontoffice)
     this.currentUser = null;
   }
 
@@ -136,6 +144,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   isLearner(): boolean {
     return this.currentUser?.role === 'LEARNER';
+  }
+
+  isTrainer(): boolean {
+    return this.currentUser?.role === 'TRAINER';
+  }
+
+  isAdmin(): boolean {
+    return this.currentUser?.role === 'ADMIN';
   }
 
   getUserInitial(): string {

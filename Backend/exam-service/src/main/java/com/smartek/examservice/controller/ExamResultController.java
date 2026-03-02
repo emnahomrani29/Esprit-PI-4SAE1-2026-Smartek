@@ -34,4 +34,14 @@ public class ExamResultController {
     public ResponseEntity<List<ExamResultResponse>> getResultsByExam(@PathVariable Long examId) {
         return ResponseEntity.ok(examResultService.getResultsByExam(examId));
     }
+
+    @GetMapping("/{resultId}")
+    public ResponseEntity<ExamResultResponse> getResultById(@PathVariable Long resultId) {
+        return ResponseEntity.ok(examResultService.getResultById(resultId));
+    }
+
+    @GetMapping("/{resultId}/answers")
+    public ResponseEntity<List<UserAnswerResponse>> getUserAnswers(@PathVariable Long resultId) {
+        return ResponseEntity.ok(examResultService.getUserAnswers(resultId));
+    }
 }

@@ -11,12 +11,19 @@ import com.smartek.trainingservice.repository.TrainingRepository;
 import com.smartek.trainingservice.repository.TrainingEnrollmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,12 +37,13 @@ public class TrainingService {
     private final ExamClient examClient;
     
     @Transactional
+    @CacheEvict(value = {"trainings", "trainingsByCategory", "trainingsByLevel"}, allEntries = true)
     public TrainingResponse createTraining(TrainingRequest request) {
         log.info("Création d'une nouvelle formation: {}", request.getTitle());
         
-        if (trainingRepository.findByTitle(request.getTitle()).isPresent()) {
+        trainingRepository.findByTitle(request.getTitle()).ifPresent(t -> {
             throw new RuntimeException("Une formation avec ce titre existe déjà");
-        }
+        });
         
         Training training = Training.builder()
                 .title(request.getTitle())
@@ -52,6 +60,7 @@ public class TrainingService {
         return mapToResponse(savedTraining, "Formation créée avec succès");
     }
     
+    @Cacheable(value = "trainings", unless = "#result.isEmpty()")
     public List<TrainingResponse> getAllTrainings() {
         log.info("Récupération de toutes les formations");
         return trainingRepository.findAll().stream()
@@ -59,6 +68,13 @@ public class TrainingService {
                 .collect(Collectors.toList());
     }
     
+    public Page<TrainingResponse> getAllTrainingsPaginated(Pageable pageable) {
+        log.info("Récupération paginée des formations: page {}, size {}", pageable.getPageNumber(), pageable.getPageSize());
+        return trainingRepository.findAll(pageable)
+                .map(training -> mapToResponse(training, null));
+    }
+    
+    @Cacheable(value = "training", key = "#id")
     public TrainingResponse getTrainingById(Long id) {
         log.info("Récupération de la formation avec ID: {}", id);
         Training training = trainingRepository.findById(id)
@@ -66,6 +82,7 @@ public class TrainingService {
         return mapToResponse(training, null);
     }
     
+    @Cacheable(value = "trainingsByCategory", key = "#category")
     public List<TrainingResponse> getTrainingsByCategory(String category) {
         log.info("Récupération des formations de la catégorie: {}", category);
         return trainingRepository.findByCategory(category).stream()
@@ -73,6 +90,7 @@ public class TrainingService {
                 .collect(Collectors.toList());
     }
     
+    @Cacheable(value = "trainingsByLevel", key = "#level")
     public List<TrainingResponse> getTrainingsByLevel(String level) {
         log.info("Récupération des formations du niveau: {}", level);
         return trainingRepository.findByLevel(level).stream()
@@ -82,13 +100,14 @@ public class TrainingService {
     
     public List<TrainingResponse> getTrainingsByCourseId(Long courseId) {
         log.info("Récupération des formations contenant le cours: {}", courseId);
-        return trainingRepository.findAll().stream()
-                .filter(training -> training.getCourseIds().contains(courseId))
+        return trainingRepository.findByCourseId(courseId).stream()
                 .map(training -> mapToResponse(training, null))
                 .collect(Collectors.toList());
     }
     
     @Transactional
+    @CachePut(value = "training", key = "#id")
+    @CacheEvict(value = {"trainings", "trainingsByCategory", "trainingsByLevel"}, allEntries = true)
     public TrainingResponse updateTraining(Long id, TrainingRequest request) {
         log.info("Mise à jour de la formation avec ID: {}", id);
         
@@ -112,6 +131,8 @@ public class TrainingService {
     }
     
     @Transactional
+    @CachePut(value = "training", key = "#trainingId")
+    @CacheEvict(value = {"trainings", "trainingsByCategory", "trainingsByLevel"}, allEntries = true)
     public TrainingResponse addCourseToTraining(Long trainingId, Long courseId) {
         log.info("Ajout du cours {} à la formation {}", courseId, trainingId);
         
@@ -127,6 +148,8 @@ public class TrainingService {
     }
     
     @Transactional
+    @CachePut(value = "training", key = "#trainingId")
+    @CacheEvict(value = {"trainings", "trainingsByCategory", "trainingsByLevel"}, allEntries = true)
     public TrainingResponse removeCourseFromTraining(Long trainingId, Long courseId) {
         log.info("Suppression du cours {} de la formation {}", courseId, trainingId);
         
@@ -140,7 +163,9 @@ public class TrainingService {
     }
     
     @Transactional
-    public void deleteTraining(Long id) {
+    @Async
+    @CacheEvict(value = {"training", "trainings", "trainingsByCategory", "trainingsByLevel"}, allEntries = true)
+    public CompletableFuture<Void> deleteTraining(Long id) {
         log.info("Suppression de la formation avec ID: {}", id);
         
         Training training = trainingRepository.findById(id)
@@ -153,7 +178,6 @@ public class TrainingService {
             log.info("Examens supprimés avec succès pour la formation {}", id);
         } catch (Exception e) {
             log.warn("Erreur lors de la suppression des examens: {}", e.getMessage());
-            // Continuer même si la suppression des examens échoue
         }
         
         // Supprimer tous les quiz associés aux cours de cette formation
@@ -164,7 +188,6 @@ public class TrainingService {
                     examClient.deleteQuizzesByCourseId(courseId);
                 } catch (Exception e) {
                     log.warn("Erreur lors de la suppression des quiz du cours {}: {}", courseId, e.getMessage());
-                    // Continuer même si la suppression échoue
                 }
             }
         }
@@ -176,6 +199,8 @@ public class TrainingService {
         // Maintenant supprimer la formation
         trainingRepository.delete(training);
         log.info("Formation supprimée avec succès: ID {}", id);
+        
+        return CompletableFuture.completedFuture(null);
     }
     
     private TrainingResponse mapToResponse(Training training, String message) {

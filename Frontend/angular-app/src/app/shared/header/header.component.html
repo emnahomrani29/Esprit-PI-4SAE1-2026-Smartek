@@ -7,10 +7,62 @@
 
     <!-- Desktop Navigation -->
     <nav class="hidden lg:flex grow items-center gap-8 justify-start ml-14">
-      <a *ngFor="let item of headerData" [href]="item.href" class="text-base font-medium text-gray-700 hover:text-blue-600 transition duration-300 relative group">
-        {{ item.label }}
-        <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-300 group-hover:w-full"></span>
-      </a>
+      <ng-container *ngFor="let item of headerData">
+        <!-- Remplacer Courses par Academic avec sous-menu pour LEARNER -->
+        <div *ngIf="item.label === 'Courses' && isAuthenticated() && isLearner()" class="relative academic-menu-container">
+          <button (click)="toggleAcademicMenu()" class="text-base font-medium text-gray-700 hover:text-blue-600 transition duration-300 relative group flex items-center gap-1">
+            Academic
+            <svg class="w-4 h-4 transition-transform" [class.rotate-180]="academicMenuOpen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-300 group-hover:w-full"></span>
+          </button>
+          
+          <!-- Dropdown Menu Academic pour LEARNER -->
+          <div *ngIf="academicMenuOpen" class="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50 animate-fade-in-down">
+            <a href="/learner-training" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
+              📚 Training
+            </a>
+            <a href="/learner-courses" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
+              📖 Courses
+            </a>
+            <a href="/learner-exams" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
+              📝 Exams
+            </a>
+          </div>
+        </div>
+        
+        <!-- Menu Academic pour TRAINER -->
+        <div *ngIf="item.label === 'Courses' && isAuthenticated() && isTrainer()" class="relative academic-menu-container">
+          <button (click)="toggleAcademicMenu()" class="text-base font-medium text-gray-700 hover:text-green-600 transition duration-300 relative group flex items-center gap-1">
+            Academic
+            <svg class="w-4 h-4 transition-transform" [class.rotate-180]="academicMenuOpen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+            <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-green-600 to-emerald-600 transition-all duration-300 group-hover:w-full"></span>
+          </button>
+          
+          <!-- Dropdown Menu Academic pour TRAINER -->
+          <div *ngIf="academicMenuOpen" class="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50 animate-fade-in-down">
+            <a href="/trainer/courses" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 transition">
+              📚 Courses
+            </a>
+            <a href="/trainer/training-management" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 transition">
+              📋 Training
+            </a>
+            <a href="/trainer/exams" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 transition">
+              📝 Exams
+            </a>
+          </div>
+        </div>
+        
+        <!-- Afficher les autres items normalement (ou Courses si pas LEARNER/TRAINER) -->
+        <a *ngIf="!(item.label === 'Courses' && isAuthenticated() && (isLearner() || isTrainer()))" [href]="item.href" class="text-base font-medium text-gray-700 hover:text-blue-600 transition duration-300 relative group">
+          {{ item.label }}
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-300 group-hover:w-full"></span>
+        </a>
+      </ng-container>
+      
       <!-- Offres d'Emploi - Visible uniquement pour LEARNER -->
       <a *ngIf="isAuthenticated() && isLearner()" href="/test-offers-learner" class="text-base font-medium text-gray-700 hover:text-blue-600 transition duration-300 relative group">
         📋 Offres d'Emploi
@@ -51,7 +103,7 @@
             <p class="text-xs text-gray-500 truncate">{{ currentUser?.email }}</p>
           </div>
           
-          <button (click)="goToDashboard()" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition">
+          <button *ngIf="isAdmin()" (click)="goToDashboard()" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition">
             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
             </svg>
@@ -100,9 +152,58 @@
       </button>
     </div>
     <nav class="flex flex-col items-start p-6 space-y-4">
-      <a *ngFor="let item of headerData" [href]="item.href" class="text-base font-medium text-gray-700 hover:text-blue-600 py-2 w-full transition duration-300">
-        {{ item.label }}
-      </a>
+      <ng-container *ngFor="let item of headerData">
+        <!-- Remplacer Courses par Academic avec sous-menu pour LEARNER -->
+        <div *ngIf="item.label === 'Courses' && isAuthenticated() && isLearner()" class="w-full">
+          <button (click)="toggleAcademicMenu()" class="text-base font-medium text-gray-700 hover:text-blue-600 py-2 w-full transition duration-300 flex items-center justify-between">
+            <span>Academic</span>
+            <svg class="w-4 h-4 transition-transform" [class.rotate-180]="academicMenuOpen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+          
+          <!-- Sous-menu Academic Mobile pour LEARNER -->
+          <div *ngIf="academicMenuOpen" class="ml-4 mt-2 space-y-2">
+            <a href="/learner-training" class="block text-sm text-gray-600 hover:text-blue-600 py-2 transition duration-300">
+              📚 Training
+            </a>
+            <a href="/learner-courses" class="block text-sm text-gray-600 hover:text-blue-600 py-2 transition duration-300">
+              📖 Courses
+            </a>
+            <a href="/learner-exams" class="block text-sm text-gray-600 hover:text-blue-600 py-2 transition duration-300">
+              📝 Exams
+            </a>
+          </div>
+        </div>
+        
+        <!-- Menu Academic Mobile pour TRAINER -->
+        <div *ngIf="item.label === 'Courses' && isAuthenticated() && isTrainer()" class="w-full">
+          <button (click)="toggleAcademicMenu()" class="text-base font-medium text-gray-700 hover:text-green-600 py-2 w-full transition duration-300 flex items-center justify-between">
+            <span>Academic</span>
+            <svg class="w-4 h-4 transition-transform" [class.rotate-180]="academicMenuOpen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+          
+          <!-- Sous-menu Academic Mobile pour TRAINER -->
+          <div *ngIf="academicMenuOpen" class="ml-4 mt-2 space-y-2">
+            <a href="/trainer/courses" class="block text-sm text-gray-600 hover:text-green-600 py-2 transition duration-300">
+              📚 Courses
+            </a>
+            <a href="/trainer/training-management" class="block text-sm text-gray-600 hover:text-green-600 py-2 transition duration-300">
+              📋 Training
+            </a>
+            <a href="/trainer/exams" class="block text-sm text-gray-600 hover:text-green-600 py-2 transition duration-300">
+              📝 Exams
+            </a>
+          </div>
+        </div>
+        
+        <!-- Afficher les autres items normalement (ou Courses si pas LEARNER/TRAINER) -->
+        <a *ngIf="!(item.label === 'Courses' && isAuthenticated() && (isLearner() || isTrainer()))" [href]="item.href" class="text-base font-medium text-gray-700 hover:text-blue-600 py-2 w-full transition duration-300">
+          {{ item.label }}
+        </a>
+      </ng-container>
       
       <!-- Offres d'Emploi Mobile - Visible uniquement pour LEARNER -->
       <a *ngIf="isAuthenticated() && isLearner()" href="/test-offers-learner" class="text-base font-medium text-gray-700 hover:text-blue-600 py-2 w-full transition duration-300">
@@ -137,7 +238,7 @@
         </div>
         
         <div class="flex flex-col gap-2">
-          <button (click)="goToDashboard()" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg flex items-center gap-3 transition">
+          <button *ngIf="isAdmin()" (click)="goToDashboard()" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg flex items-center gap-3 transition">
             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
             </svg>
