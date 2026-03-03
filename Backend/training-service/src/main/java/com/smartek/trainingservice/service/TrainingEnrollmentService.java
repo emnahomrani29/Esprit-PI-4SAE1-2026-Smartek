@@ -1,8 +1,13 @@
 package com.smartek.trainingservice.service;
 
 import com.smartek.trainingservice.client.ExamClient;
+import com.smartek.trainingservice.client.CourseClient;
+import com.smartek.trainingservice.client.CourseResponse;
+import com.smartek.trainingservice.client.ChapterResponse;
 import com.smartek.trainingservice.dto.TrainingEnrollmentRequest;
 import com.smartek.trainingservice.dto.TrainingEnrollmentResponse;
+import com.smartek.trainingservice.dto.TrainingStatsResponse;
+import com.smartek.trainingservice.dto.TrainingResponse;
 import com.smartek.trainingservice.entity.Training;
 import com.smartek.trainingservice.entity.TrainingEnrollment;
 import com.smartek.trainingservice.repository.TrainingRepository;
@@ -11,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +29,7 @@ public class TrainingEnrollmentService {
     private final TrainingEnrollmentRepository enrollmentRepository;
     private final TrainingRepository trainingRepository;
     private final ExamClient examClient;
+    private final CourseClient courseClient;
     
     @Transactional
     public TrainingEnrollmentResponse enrollUser(TrainingEnrollmentRequest request) {
@@ -158,5 +166,124 @@ public class TrainingEnrollmentService {
         
         // Vérifier si la progression est à 100% ou si completedAt est défini
         return enrollment.getProgress() >= 100 || enrollment.getCompletedAt() != null;
+    }
+    
+    public TrainingStatsResponse getTrainingStatsByUserId(Long userId) {
+        log.info("Récupération des statistiques de formation pour l'utilisateur: {}", userId);
+        
+        List<TrainingEnrollment> enrollments = enrollmentRepository.findByUserId(userId);
+        
+        long totalEnrolled = enrollments.size();
+        long completed = enrollments.stream()
+                .filter(e -> "COMPLETED".equals(e.getStatus()))
+                .count();
+        long inProgress = enrollments.stream()
+                .filter(e -> "IN_PROGRESS".equals(e.getStatus()) || "COURSES_COMPLETED".equals(e.getStatus()))
+                .count();
+        
+        double averageProgress = enrollments.stream()
+                .mapToInt(TrainingEnrollment::getProgress)
+                .average()
+                .orElse(0.0);
+        
+        // Status breakdown
+        java.util.Map<String, Integer> statusBreakdown = new java.util.HashMap<>();
+        for (TrainingEnrollment enrollment : enrollments) {
+            String status = enrollment.getStatus();
+            statusBreakdown.put(status, statusBreakdown.getOrDefault(status, 0) + 1);
+        }
+        
+        return TrainingStatsResponse.builder()
+                .userId(userId)
+                .totalEnrolled((int) totalEnrolled)
+                .inProgress((int) inProgress)
+                .completed((int) completed)
+                .averageProgress(Math.round(averageProgress * 100.0) / 100.0)
+                .statusBreakdown(statusBreakdown)
+                .build();
+    }
+    
+    public List<TrainingResponse> getUserTrainingsWithDetails(Long userId) {
+        log.info("Récupération des formations complètes pour l'utilisateur: {}", userId);
+        
+        List<TrainingEnrollment> enrollments = enrollmentRepository.findByUserId(userId);
+        List<TrainingResponse> trainings = new ArrayList<>();
+        
+        for (TrainingEnrollment enrollment : enrollments) {
+            Training training = enrollment.getTraining();
+            
+            // Récupérer les informations détaillées des cours
+            List<TrainingResponse.CourseInfo> courses = new ArrayList<>();
+            if (!training.getCourseIds().isEmpty()) {
+                for (Long courseId : training.getCourseIds()) {
+                    try {
+                        CourseResponse courseResponse = courseClient.getCourseById(courseId);
+                        List<ChapterResponse> chapterResponses = courseClient.getChaptersByCourseId(courseId);
+                        
+                        List<TrainingResponse.ChapterInfo> chapters = chapterResponses.stream()
+                                .map(ch -> TrainingResponse.ChapterInfo.builder()
+                                        .chapterId(ch.getChapterId())
+                                        .title(ch.getTitle())
+                                        .description(ch.getDescription())
+                                        .orderIndex(ch.getOrderIndex())
+                                        .pdfFileName(ch.getPdfFileName())
+                                        .pdfFilePath(ch.getPdfFilePath())
+                                        .build())
+                                .collect(Collectors.toList());
+                        
+                        TrainingResponse.CourseInfo courseInfo = TrainingResponse.CourseInfo.builder()
+                                .courseId(courseResponse.getCourseId())
+                                .title(courseResponse.getTitle())
+                                .content(courseResponse.getContent())
+                                .duration(courseResponse.getDuration() != null ? 
+                                    LocalDate.parse(courseResponse.getDuration()) : null)
+                                .chapters(chapters)
+                                .build();
+                        courses.add(courseInfo);
+                    } catch (Exception e) {
+                        log.error("Erreur lors de la récupération du cours {}: {}", courseId, e.getMessage());
+                    }
+                }
+            }
+            
+            TrainingResponse trainingResponse = TrainingResponse.builder()
+                    .trainingId(training.getTrainingId())
+                    .title(training.getTitle())
+                    .description(training.getDescription())
+                    .category(training.getCategory())
+                    .level(training.getLevel())
+                    .duration(training.getDuration())
+                    .courseIds(training.getCourseIds())
+                    .courses(courses)
+                    .createdAt(training.getCreatedAt())
+                    .updatedAt(training.getUpdatedAt())
+                    .build();
+            
+            trainings.add(trainingResponse);
+        }
+        
+        return trainings;
+    }
+    
+    public List<com.smartek.trainingservice.dto.TrainerTrainingAnalyticsResponse> getTrainerTrainingAnalytics(Long trainerId) {
+        List<Training> trainerTrainings = trainingRepository.findByCreatedBy(trainerId);
+        List<com.smartek.trainingservice.dto.TrainerTrainingAnalyticsResponse> analytics = new ArrayList<>();
+        
+        for (Training training : trainerTrainings) {
+            long totalEnrollments = enrollmentRepository.countByTrainingTrainingId(training.getTrainingId());
+            long activeEnrollments = enrollmentRepository.countByTrainingTrainingIdAndStatus(training.getTrainingId(), "IN_PROGRESS");
+            long completedEnrollments = enrollmentRepository.countByTrainingTrainingIdAndStatus(training.getTrainingId(), "COMPLETED");
+            
+            com.smartek.trainingservice.dto.TrainerTrainingAnalyticsResponse response = new com.smartek.trainingservice.dto.TrainerTrainingAnalyticsResponse();
+            response.setTrainingId(training.getTrainingId());
+            response.setTrainingTitle(training.getTitle());
+            response.setTotalEnrollments((int) totalEnrollments);
+            response.setActiveEnrollments((int) activeEnrollments);
+            response.setCompletedEnrollments((int) completedEnrollments);
+            
+            analytics.add(response);
+        }
+        
+        return analytics;
     }
 }

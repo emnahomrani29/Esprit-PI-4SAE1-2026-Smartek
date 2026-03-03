@@ -36,7 +36,7 @@ spring:
         - id: training-service
           uri: lb://training-service
           predicates:
-            - Path=/api/trainings/**
+            - Path=/api/trainings/**,/api/training/**
         - id: exam-service
           uri: lb://exam-service
           predicates:

@@ -52,6 +52,7 @@ public class TrainingService {
                 .level(request.getLevel())
                 .duration(request.getDuration())
                 .courseIds(request.getCourseIds() != null ? request.getCourseIds() : List.of())
+                .createdBy(request.getCreatedBy())
                 .build();
         
         Training savedTraining = trainingRepository.save(training);

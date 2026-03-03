@@ -49,6 +49,10 @@ public class Training {
     @Column(name = "exam_id")
     private Long examId;
     
+    // ID du trainer qui a créé la formation
+    @Column(name = "created_by")
+    private Long createdBy;
+    
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
     

@@ -2,6 +2,7 @@ package com.smartek.trainingservice.controller;
 
 import com.smartek.trainingservice.dto.TrainingEnrollmentRequest;
 import com.smartek.trainingservice.dto.TrainingEnrollmentResponse;
+import com.smartek.trainingservice.dto.TrainingResponse;
 import com.smartek.trainingservice.service.TrainingEnrollmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,6 +31,12 @@ public class TrainingEnrollmentController {
     public ResponseEntity<List<TrainingEnrollmentResponse>> getUserEnrollments(@PathVariable Long userId) {
         List<TrainingEnrollmentResponse> enrollments = enrollmentService.getUserEnrollments(userId);
         return ResponseEntity.ok(enrollments);
+    }
+    
+    @GetMapping("/user/{userId}/details")
+    public ResponseEntity<List<TrainingResponse>> getUserTrainingsWithDetails(@PathVariable Long userId) {
+        List<TrainingResponse> trainings = enrollmentService.getUserTrainingsWithDetails(userId);
+        return ResponseEntity.ok(trainings);
     }
     
     @GetMapping("/training/{trainingId}")
@@ -68,10 +75,30 @@ public class TrainingEnrollmentController {
         Boolean hasCompleted = enrollmentService.hasCompletedAllCourses(userId, trainingId);
         return ResponseEntity.ok(hasCompleted);
     }
+    
+    @GetMapping("/stats/user/{userId}")
+    public ResponseEntity<com.smartek.trainingservice.dto.TrainingStatsResponse> getUserTrainingStats(@PathVariable Long userId) {
+        try {
+            com.smartek.trainingservice.dto.TrainingStatsResponse stats = enrollmentService.getTrainingStatsByUserId(userId);
+            return ResponseEntity.ok(stats);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 
     @GetMapping("/health")
     public ResponseEntity<String> health() {
         return ResponseEntity.ok("Training Service is running");
+    }
+    
+    @GetMapping("/trainer/{trainerId}/analytics")
+    public ResponseEntity<List<com.smartek.trainingservice.dto.TrainerTrainingAnalyticsResponse>> getTrainerAnalytics(@PathVariable Long trainerId) {
+        try {
+            List<com.smartek.trainingservice.dto.TrainerTrainingAnalyticsResponse> analytics = enrollmentService.getTrainerTrainingAnalytics(trainerId);
+            return ResponseEntity.ok(analytics);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }
 

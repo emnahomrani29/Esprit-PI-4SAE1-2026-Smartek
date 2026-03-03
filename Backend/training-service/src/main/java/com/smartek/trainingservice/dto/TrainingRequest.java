@@ -31,4 +31,6 @@ public class TrainingRequest {
     private LocalDate duration;
     
     private List<Long> courseIds;
+    
+    private Long createdBy; // ID du trainer qui crée la formation
 }

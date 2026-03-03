@@ -89,4 +89,12 @@ export class CourseService {
   clearCache(): void {
     this.cache.clear();
   }
+
+  completeCourse(courseId: number, userId: number): Observable<string> {
+    return this.http.post<string>(`${this.apiUrl}/${courseId}/complete?userId=${userId}`, {}, { responseType: 'text' as 'json' });
+  }
+
+  uncompleteCourse(courseId: number, userId: number): Observable<string> {
+    return this.http.delete<string>(`${this.apiUrl}/${courseId}/uncomplete?userId=${userId}`, { responseType: 'text' as 'json' });
+  }
 }

@@ -49,6 +49,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/learner/exam-result/exam-result.component').then(m => m.ExamResultComponent),
     canActivate: [authGuard]
   },
+  { 
+    path: 'learner-performance', 
+    loadComponent: () => import('./features/learner/performance/performance.component').then(m => m.PerformanceComponent),
+    canActivate: [authGuard]
+  },
   
   // Trainer routes (sans layout, utilise le header du site)
   { 
@@ -78,6 +83,12 @@ export const routes: Routes = [
   { 
     path: 'trainer/badge-management',
     loadComponent: () => import('./features/trainer/badge-management/trainer-badge-management.component').then(m => m.TrainerBadgeManagementComponent),
+    canActivate: [permissionGuard],
+    data: { roles: [Role.TRAINER] }
+  },
+  { 
+    path: 'trainer/learner-analytics',
+    loadComponent: () => import('./features/trainer/learner-analytics/learner-analytics.component').then(m => m.LearnerAnalyticsComponent),
     canActivate: [permissionGuard],
     data: { roles: [Role.TRAINER] }
   },

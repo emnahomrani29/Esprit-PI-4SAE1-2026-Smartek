@@ -5,6 +5,7 @@ import { trigger, transition, style, animate } from '@angular/animations';
 import { TrainingService } from '../../../core/services/training.service';
 import { TrainingEnrollmentService, TrainingEnrollmentResponse } from '../../../core/services/training-enrollment.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { CourseService } from '../../../core/services/course.service';
 import { Training, CourseInfo } from '../../../core/models/training.model';
 import { SafePipe } from '../../../core/pipes/safe.pipe';
 
@@ -50,7 +51,8 @@ export class LearnerCoursesComponent implements OnInit {
     private router: Router,
     private trainingService: TrainingService,
     private enrollmentService: TrainingEnrollmentService,
-    private authService: AuthService
+    private authService: AuthService,
+    private courseService: CourseService
   ) {}
 
   ngOnInit(): void {
@@ -138,15 +140,51 @@ export class LearnerCoursesComponent implements OnInit {
   toggleCourseCompletion(trainingWithCourses: TrainingWithCourses, courseId: number | undefined): void {
     if (!courseId) return;
 
-    if (trainingWithCourses.completedCourses.has(courseId)) {
-      trainingWithCourses.completedCourses.delete(courseId);
-    } else {
-      trainingWithCourses.completedCourses.add(courseId);
-    }
+    const currentUser = this.authService.getUserInfo();
+    if (!currentUser?.userId) return;
 
-    this.saveCompletedCourses(trainingWithCourses);
-    this.updateProgress(trainingWithCourses);
-  }
+    const wasCompleted = trainingWithCourses.completedCourses.has(courseId);
+
+    if (wasCompleted) {
+      // Dé-compléter le cours
+      trainingWithCourses.completedCourses.delete(courseId);
+      this.saveCompletedCourses(trainingWithCourses);
+      this.updateProgress(trainingWithCourses);
+
+      // Appeler l'API backend pour dé-compléter le cours
+      this.courseService.uncompleteCourse(courseId, currentUser.userId).subscribe({
+        next: () => {
+          console.log(`Cours ${courseId} marqué comme non terminé dans le backend`);
+        },
+        error: (error) => {
+          console.error('Erreur lors de la dé-complétion du cours:', error);
+          // Rollback en cas d'erreur
+          trainingWithCourses.completedCourses.add(courseId);
+          this.saveCompletedCourses(trainingWithCourses);
+          this.updateProgress(trainingWithCourses);
+        }
+      });
+    } else {
+      // Compléter le cours
+      trainingWithCourses.completedCourses.add(courseId);
+      this.saveCompletedCourses(trainingWithCourses);
+      this.updateProgress(trainingWithCourses);
+
+      // Appeler l'API backend pour compléter le cours
+      this.courseService.completeCourse(courseId, currentUser.userId).subscribe({
+        next: () => {
+          console.log(`Cours ${courseId} marqué comme terminé dans le backend`);
+        },
+        error: (error) => {
+          console.error('Erreur lors de la complétion du cours:', error);
+          // Rollback en cas d'erreur
+          trainingWithCourses.completedCourses.delete(courseId);
+          this.saveCompletedCourses(trainingWithCourses);
+          this.updateProgress(trainingWithCourses);
+    }
+ });
+    }
+  }         
 
   updateProgress(trainingWithCourses: TrainingWithCourses): void {
     if (trainingWithCourses.courses.length === 0) return;

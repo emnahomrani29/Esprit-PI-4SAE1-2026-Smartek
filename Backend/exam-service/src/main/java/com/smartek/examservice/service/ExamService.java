@@ -51,6 +51,7 @@ public class ExamService {
         exam.setStartDate(request.getStartDate());
         exam.setEndDate(request.getEndDate());
         exam.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
+        exam.setCreatedBy(request.getCreatedBy());
         
         Exam savedExam = examRepository.save(exam);
         
@@ -104,10 +105,28 @@ public class ExamService {
     }
 
     @Cacheable(value = "exam", key = "#id")
+    @Transactional(readOnly = true)
     public ExamResponse getExamById(Long id) {
-        Exam exam = examRepository.findByIdWithQuestions(id)
-                .orElseThrow(() -> new RuntimeException("Exam not found"));
-        return mapToResponseWithQuestions(exam);
+        Exam exam = examRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Exam not found with id: " + id));
+        
+        try {
+            // Charger les questions et leurs options de manière explicite
+            if (exam.getQuestions() != null) {
+                exam.getQuestions().size(); // Force lazy loading
+                exam.getQuestions().forEach(q -> {
+                    if (q.getOptions() != null) {
+                        q.getOptions().size(); // Force lazy loading of options
+                    }
+                });
+            }
+            return mapToResponseWithQuestions(exam);
+        } catch (Exception e) {
+            // Si erreur lors du mapping avec questions, essayer sans questions
+            System.err.println("Error mapping exam with questions: " + e.getMessage());
+            e.printStackTrace();
+            return mapToResponse(exam);
+        }
     }
 
     @Transactional

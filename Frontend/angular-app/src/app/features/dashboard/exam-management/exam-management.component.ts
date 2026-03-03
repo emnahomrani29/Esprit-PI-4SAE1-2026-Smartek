@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } fr
 import { ExamService } from '../../../core/services/exam.service';
 import { CourseService } from '../../../core/services/course.service';
 import { TrainingService } from '../../../core/services/training.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Exam, Question, QuestionOption } from '../../../core/models/exam.model';
 import { Course } from '../../../core/models/course.model';
 import { Training } from '../../../core/models/training.model';
@@ -30,7 +31,8 @@ export class ExamManagementComponent implements OnInit {
     private fb: FormBuilder,
     private examService: ExamService,
     private courseService: CourseService,
-    private trainingService: TrainingService
+    private trainingService: TrainingService,
+    private authService: AuthService
   ) {
     this.examForm = this.fb.group({
       courseId: [null],
@@ -172,7 +174,7 @@ export class ExamManagementComponent implements OnInit {
     this.loading = true;
     const formValue = this.examForm.value;
     
-    // Préparer les données pour le backend (ExamRequest)
+    // Récupérer ls données pour le backend (ExamRequest)
     const examData: any = {
       courseId: formValue.courseId,
       trainingId: formValue.trainingId,
@@ -185,6 +187,7 @@ export class ExamManagementComponent implements OnInit {
       startDate: formValue.startDate,
       endDate: formValue.endDate,
       isActive: formValue.isActive,
+      createdBy: this.authService.getUserInfo()?.userId,
       questions: formValue.questions
     };
 

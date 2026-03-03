@@ -29,4 +29,6 @@ public interface TrainingRepository extends JpaRepository<Training, Long> {
     
     @Query("SELECT COUNT(t) FROM Training t WHERE t.category = :category")
     long countByCategory(String category);
+    
+    List<Training> findByCreatedBy(Long createdBy);
 }

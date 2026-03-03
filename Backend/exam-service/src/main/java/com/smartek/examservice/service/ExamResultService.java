@@ -1,5 +1,7 @@
 package com.smartek.examservice.service;
 
+import com.smartek.examservice.client.UserClient;
+import com.smartek.examservice.client.UserResponse;
 import com.smartek.examservice.dto.*;
 import com.smartek.examservice.entity.*;
 import com.smartek.examservice.repository.*;
@@ -7,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,6 +21,7 @@ public class ExamResultService {
     private final QuestionRepository questionRepository;
     private final ExamEnrollmentRepository examEnrollmentRepository;
     private final ExamDraftService examDraftService;
+    private final UserClient userClient;
 
     @Transactional
     public ExamResultResponse submitExam(ExamSubmissionDTO request) {
@@ -180,42 +184,81 @@ public class ExamResultService {
     }
 
     private boolean checkAnswer(Question question, ExamSubmissionDTO.AnswerDTO answerDTO) {
+        System.out.println("=== CHECK ANSWER DEBUG ===");
+        System.out.println("Question ID: " + question.getId());
+        System.out.println("Question Type: " + question.getQuestionType());
+        System.out.println("Selected Answer: " + answerDTO.getSelectedAnswer());
+        System.out.println("Selected Options: " + answerDTO.getSelectedOptions());
+        System.out.println("Correct Answer: " + question.getCorrectAnswer());
+        
         if ("MULTIPLE_CHOICE".equals(question.getQuestionType()) || "TRUE_FALSE".equals(question.getQuestionType())) {
-            // Pour les QCM, vérifier que toutes les bonnes réponses sont sélectionnées
-            if (answerDTO.getSelectedOptions() == null || answerDTO.getSelectedOptions().isEmpty()) {
-                return false;
-            }
-            
             List<QuestionOption> options = question.getOptions();
             if (options == null || options.isEmpty()) {
+                System.out.println("No options found for question");
                 return false;
             }
             
-            // Compter les bonnes réponses attendues
-            long expectedCorrectCount = options.stream().filter(QuestionOption::getIsCorrect).count();
-            
-            // Vérifier que le nombre de réponses sélectionnées correspond
-            if (answerDTO.getSelectedOptions().size() != expectedCorrectCount) {
+            // Si selectedOptions est fourni (liste d'indices)
+            if (answerDTO.getSelectedOptions() != null && !answerDTO.getSelectedOptions().isEmpty()) {
+                System.out.println("Using selectedOptions (indices)");
+                
+                // Compter les bonnes réponses attendues
+                long expectedCorrectCount = options.stream().filter(QuestionOption::getIsCorrect).count();
+                
+                // Vérifier que le nombre de réponses sélectionnées correspond
+                if (answerDTO.getSelectedOptions().size() != expectedCorrectCount) {
+                    System.out.println("Wrong number of selections: " + answerDTO.getSelectedOptions().size() + " vs " + expectedCorrectCount);
+                    return false;
+                }
+                
+                // Vérifier que toutes les options sélectionnées sont correctes
+                for (Integer optionIndex : answerDTO.getSelectedOptions()) {
+                    if (optionIndex < 0 || optionIndex >= options.size()) {
+                        System.out.println("Invalid option index: " + optionIndex);
+                        return false;
+                    }
+                    if (!options.get(optionIndex).getIsCorrect()) {
+                        System.out.println("Option " + optionIndex + " is not correct");
+                        return false;
+                    }
+                }
+                
+                System.out.println("Answer is CORRECT (using indices)");
+                return true;
+            }
+            // Sinon, utiliser selectedAnswer (texte de la réponse)
+            else if (answerDTO.getSelectedAnswer() != null && !answerDTO.getSelectedAnswer().trim().isEmpty()) {
+                System.out.println("Using selectedAnswer (text)");
+                
+                // Chercher l'option qui correspond au texte sélectionné
+                for (int i = 0; i < options.size(); i++) {
+                    QuestionOption option = options.get(i);
+                    System.out.println("Option " + i + ": " + option.getOptionText() + " (isCorrect: " + option.getIsCorrect() + ")");
+                    
+                    if (option.getOptionText().trim().equalsIgnoreCase(answerDTO.getSelectedAnswer().trim())) {
+                        System.out.println("Found matching option at index " + i);
+                        boolean isCorrect = option.getIsCorrect();
+                        System.out.println("Answer is " + (isCorrect ? "CORRECT" : "INCORRECT"));
+                        return isCorrect;
+                    }
+                }
+                
+                System.out.println("No matching option found for: " + answerDTO.getSelectedAnswer());
                 return false;
             }
             
-            // Vérifier que toutes les options sélectionnées sont correctes
-            for (Integer optionIndex : answerDTO.getSelectedOptions()) {
-                if (optionIndex < 0 || optionIndex >= options.size()) {
-                    return false;
-                }
-                if (!options.get(optionIndex).getIsCorrect()) {
-                    return false;
-                }
-            }
+            System.out.println("No answer provided");
+            return false;
             
-            return true;
         } else if ("SHORT_ANSWER".equals(question.getQuestionType())) {
             // Pour les réponses courtes, comparer avec la réponse correcte
-            return question.getCorrectAnswer() != null && 
+            boolean isCorrect = question.getCorrectAnswer() != null && 
                    question.getCorrectAnswer().trim().equalsIgnoreCase(answerDTO.getSelectedAnswer().trim());
+            System.out.println("Short answer is " + (isCorrect ? "CORRECT" : "INCORRECT"));
+            return isCorrect;
         }
         
+        System.out.println("Unknown question type");
         return false;
     }
 
@@ -242,5 +285,63 @@ public class ExamResultService {
         response.setTimeTaken(result.getTimeTaken());
         response.setIsCorrected(result.getIsCorrected());
         return response;
+    }
+    
+    public ExamStatsResponse getExamStatsByUserId(Long userId) {
+        List<ExamResult> results = examResultRepository.findByUserId(userId);
+        List<Exam> allExams = examRepository.findAll();
+        
+        int totalAvailable = allExams.size();
+        long attempted = examResultRepository.countDistinctExamIdByUserId(userId);
+        long passed = results.stream().filter(ExamResult::getPassed).count();
+        long failed = results.stream().filter(r -> !r.getPassed()).count();
+        
+        double averageScore = results.stream()
+                .mapToDouble(ExamResult::getPercentage)
+                .average()
+                .orElse(0.0);
+        
+        double successRate = attempted > 0 ? (passed * 100.0 / attempted) : 0.0;
+        
+        return ExamStatsResponse.builder()
+                .userId(userId)
+                .totalAvailable(totalAvailable)
+                .attempted((int) attempted)
+                .passed((int) passed)
+                .failed((int) failed)
+                .averageScore(Math.round(averageScore * 100.0) / 100.0)
+                .successRate(Math.round(successRate * 100.0) / 100.0)
+                .totalAttempts(results.size())
+                .build();
+    }
+    
+    public List<TrainerExamAnalyticsResponse> getTrainerExamAnalytics(Long trainerId) {
+        List<ExamResult> results = examResultRepository.findAllByTrainerId(trainerId);
+        List<TrainerExamAnalyticsResponse> analytics = new ArrayList<>();
+        
+        for (ExamResult result : results) {
+            try {
+                UserResponse user = userClient.getUserById(result.getUserId());
+                
+                TrainerExamAnalyticsResponse response = new TrainerExamAnalyticsResponse();
+                response.setExamId(result.getExam().getId());
+                response.setExamTitle(result.getExam().getTitle());
+                response.setLearnerId(user.getId());
+                response.setLearnerName(user.getFirstName() + " " + user.getLastName());
+                response.setLearnerEmail(user.getEmail());
+                response.setScore(result.getObtainedMarks());
+                response.setMaxScore(result.getTotalMarks());
+                response.setPercentage(result.getPercentage());
+                response.setStatus(result.getPassed() ? "passed" : "failed");
+                response.setCompletedAt(result.getSubmittedAt());
+                
+                analytics.add(response);
+            } catch (Exception e) {
+                // Si on ne peut pas récupérer l'utilisateur, on continue
+                System.err.println("Error fetching user " + result.getUserId() + ": " + e.getMessage());
+            }
+        }
+        
+        return analytics;
     }
 }

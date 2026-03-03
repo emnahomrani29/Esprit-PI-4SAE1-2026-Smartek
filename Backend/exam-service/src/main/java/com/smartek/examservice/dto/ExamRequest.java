@@ -17,5 +17,6 @@ public class ExamRequest {
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private Boolean isActive;
+    private Long createdBy; // ID du trainer qui crée l'examen
     private List<QuestionRequest> questions; // Questions à créer avec l'examen
 }

@@ -48,6 +48,9 @@ public class Exam {
     @Column(nullable = false)
     private Boolean isActive = true;
 
+    @Column(name = "created_by")
+    private Long createdBy; // ID du trainer qui a créé l'examen
+
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

@@ -21,5 +21,7 @@ public interface TrainingClient {
     
     @GetMapping("/api/trainings/by-course/{courseId}")
     List<TrainingResponse> getTrainingsByCourse(@PathVariable("courseId") Long courseId);
+    
+    @GetMapping("/api/trainings/enrollments/user/{userId}/details")
+    List<TrainingResponse> getUserTrainings(@PathVariable("userId") Long userId);
 }
-
