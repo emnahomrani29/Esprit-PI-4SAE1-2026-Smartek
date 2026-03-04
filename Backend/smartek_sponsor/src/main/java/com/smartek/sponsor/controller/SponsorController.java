@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/sponsors")
+@RequestMapping("/api/v1/sponsors")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class SponsorController {

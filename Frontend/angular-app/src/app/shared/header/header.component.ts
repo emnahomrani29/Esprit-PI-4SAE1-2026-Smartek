@@ -42,7 +42,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
           this.currentUser = userData;
         },
         error: (error) => {
-          console.error('Error fetching user data:', error);
+          // Error fetching user data
         }
       });
       
@@ -65,13 +65,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.authService.validateUser().subscribe({
         next: (isValid) => {
           if (!isValid) {
-            console.log('Utilisateur supprimé ou invalide, déconnexion automatique...');
             this.authService.logout();
             this.currentUser = null;
           }
         },
         error: () => {
-          console.log('Erreur de validation, déconnexion...');
           this.authService.logout();
           this.currentUser = null;
         }

@@ -46,12 +46,12 @@ export const MENU_ITEMS: MenuItem[] = [
   {
     label: '',
     icon: '',
-    header: 'Sponsor Module',
+    header: 'Management',
     roles: [Role.ADMIN]
   },
   {
     label: 'Sponsors',
-    icon: 'handshake',
+    icon: 'people',
     route: '/dashboard/sponsors',
     roles: [Role.ADMIN]
   },
@@ -63,7 +63,7 @@ export const MENU_ITEMS: MenuItem[] = [
   },
   {
     label: 'Sponsorships',
-    icon: 'volunteer_activism',
+    icon: 'card_giftcard',
     route: '/dashboard/sponsorships',
     roles: [Role.ADMIN]
   },
@@ -72,29 +72,21 @@ export const MENU_ITEMS: MenuItem[] = [
   {
     label: '',
     icon: '',
-    divider: true
+    divider: true,
+    roles: [Role.ADMIN]
   },
 
-  // Header for Settings
+  // Admin Tools
   {
     label: '',
     icon: '',
-    header: 'Account'
+    header: 'System',
+    roles: [Role.ADMIN]
   },
-
-  // Profile
   {
-    label: 'Profile',
-    icon: 'person',
-    route: '/dashboard/profile',
-    permissions: []
-  },
-
-  // Back to Website
-  {
-    label: 'Back to Website',
-    icon: 'home',
-    route: '/',
-    permissions: []
+    label: 'Settings',
+    icon: 'settings',
+    route: '/dashboard/settings',
+    roles: [Role.ADMIN]
   }
 ];

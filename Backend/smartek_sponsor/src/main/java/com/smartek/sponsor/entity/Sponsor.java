@@ -1,17 +1,7 @@
 package com.smartek.sponsor.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,7 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "sponsors")
+@Table(name = "sponsors", uniqueConstraints = {
+    @UniqueConstraint(columnNames = "email", name = "unique_sponsor_email")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -33,6 +25,7 @@ public class Sponsor {
 
     private String name;
 
+    @Column(unique = true, nullable = false)
     private String email;
 
     private String phone;

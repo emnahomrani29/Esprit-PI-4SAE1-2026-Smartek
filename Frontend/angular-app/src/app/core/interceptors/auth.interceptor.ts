@@ -22,13 +22,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       // Si l'utilisateur n'existe plus ou le token est invalide (401 ou 403)
       if (error.status === 401 || error.status === 403) {
-        console.log('Utilisateur non autorisé ou token invalide, déconnexion...');
         authService.logout();
       }
       
       // Si l'utilisateur a été supprimé (404 sur les endpoints utilisateur)
       if (error.status === 404 && error.url?.includes('/api/users/')) {
-        console.log('Utilisateur introuvable, déconnexion...');
         authService.logout();
       }
 

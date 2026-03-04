@@ -5,6 +5,7 @@ import com.smartek.sponsor.dto.SponsorDashboardDTO;
 import com.smartek.sponsor.entity.Contract;
 import com.smartek.sponsor.entity.Sponsor;
 import com.smartek.sponsor.entity.Sponsorship;
+import com.smartek.sponsor.enums.RoleType;
 import com.smartek.sponsor.exception.ResourceNotFoundException;
 import com.smartek.sponsor.repository.ContractRepository;
 import com.smartek.sponsor.repository.SponsorRepository;
@@ -12,6 +13,7 @@ import com.smartek.sponsor.repository.SponsorshipRepository;
 import com.smartek.sponsor.service.SponsorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -55,15 +57,21 @@ public class SponsorServiceImpl implements SponsorService {
                     .password(sponsor.getPassword())
                     .phone(sponsor.getPhone())
                     .experience(0)
-                    .role("SPONSOR")
+                    .role(RoleType.SPONSOR)
                     .build();
 
-            restTemplate.postForEntity(
+            ResponseEntity<Object> response = restTemplate.postForEntity(
                     authServiceUrl + "/api/auth/register",
                     authRequest,
                     Object.class
             );
-            log.info("Sponsor registered in auth-service: {}", sponsor.getEmail());
+            
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Sponsor registered in auth-service: {}", sponsor.getEmail());
+            } else {
+                log.error("Failed to register sponsor in auth-service. Status: {}", response.getStatusCode());
+                throw new RuntimeException("Failed to create sponsor account");
+            }
         } catch (Exception e) {
             log.error("Failed to register sponsor in auth-service: {}", e.getMessage());
             throw new RuntimeException("Failed to create sponsor account: " + e.getMessage());

@@ -1,5 +1,6 @@
 package com.smartek.sponsor.dto;
 
+import com.smartek.sponsor.enums.RoleType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +16,6 @@ public class AuthRegisterRequest {
     private String password;
     private String phone;
     private Integer experience;
-    private String role;
+    private RoleType role;
 }
 

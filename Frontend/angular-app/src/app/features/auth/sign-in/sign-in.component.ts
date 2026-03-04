@@ -48,7 +48,7 @@ export class SignInComponent {
           console.log('Login successful:', response);
           this.isLoading = false;
           if (response.role === 'SPONSOR') {
-            this.router.navigate(['/dashboard/sponsor-dashboard']);
+            this.router.navigate(['/sponsor']);
           } else {
             this.router.navigate(['/dashboard']);
           }

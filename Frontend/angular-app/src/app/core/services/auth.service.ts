@@ -89,7 +89,6 @@ export class AuthService {
       }
       return parsed;
     } catch (e) {
-      console.error('Error parsing user info:', e);
       return null;
     }
   }

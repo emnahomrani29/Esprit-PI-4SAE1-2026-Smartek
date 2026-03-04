@@ -12,13 +12,17 @@ import { ContractListComponent } from './features/contracts/contract-list/contra
 import { AddContractComponent } from './features/contracts/add-contract/add-contract.component';
 import { EditContractComponent } from './features/contracts/edit-contract/edit-contract.component';
 import { SponsorshipListComponent } from './features/sponsorships/sponsorship-list/sponsorship-list.component';
-import { AddSponsorshipComponent } from './features/sponsorships/add-sponsorship/add-sponsorship.component';
+// import { AddSponsorshipComponent } from './features/sponsorships/add-sponsorship/add-sponsorship.component';
 import { SponsorDashboardComponent } from './features/dashboard/sponsor-dashboard/sponsor-dashboard.component';
+import { SponsorLayoutComponent } from './features/dashboard/sponsor-layout/sponsor-layout.component';
+import { AdminPendingApprovalsComponent } from './features/dashboard/admin-pending-approvals/admin-pending-approvals.component';
 
 export const routes: Routes = [
   { path: '', component: HomePageComponent },
   { path: 'auth/sign-in', component: SignInComponent },
   { path: 'auth/sign-up', component: SignUpComponent },
+  
+  // Admin Dashboard (with navbar and sidebar)
   {
     path: 'dashboard',
     component: DashboardLayoutComponent,
@@ -26,7 +30,7 @@ export const routes: Routes = [
     children: [
       { path: '', component: DashboardPageComponent },
       { path: 'profile', component: DashboardPageComponent },
-      { path: 'sponsor-dashboard', component: SponsorDashboardComponent },
+      { path: 'admin-approvals', component: AdminPendingApprovalsComponent },
 
       // Sponsor Management
       { path: 'sponsors', component: SponsorListComponent },
@@ -40,8 +44,19 @@ export const routes: Routes = [
 
       // Sponsorship Management
       { path: 'sponsorships', component: SponsorshipListComponent },
-      { path: 'sponsorships/add', component: AddSponsorshipComponent },
     ]
   },
+
+  // Sponsor Dashboard (clean layout without navbar)
+  {
+    path: 'sponsor',
+    component: SponsorLayoutComponent,
+    canActivate: [authGuard],
+    children: [
+      { path: '', component: SponsorDashboardComponent },
+      { path: 'dashboard', component: SponsorDashboardComponent },
+    ]
+  },
+
   { path: '**', redirectTo: '' }
 ];
