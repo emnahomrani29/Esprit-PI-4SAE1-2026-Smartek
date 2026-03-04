@@ -10,13 +10,13 @@ import java.util.Optional;
 @Repository
 public interface InterviewRepository extends JpaRepository<Interview, Long> {
     
-    List<Interview> findByOfferId(Long offerId);
+    List<Interview> findByApplication_Offer_Id(Long offerId);
     
     List<Interview> findByLearnerId(Long learnerId);
     
-    List<Interview> findByApplicationId(Long applicationId);
+    List<Interview> findByApplication_Id(Long applicationId);
     
-    Optional<Interview> findByApplicationIdAndStatus(Long applicationId, Interview.InterviewStatus status);
+    Optional<Interview> findByApplication_IdAndStatus(Long applicationId, Interview.InterviewStatus status);
     
     List<Interview> findByCreatedBy(Long createdBy);
 }

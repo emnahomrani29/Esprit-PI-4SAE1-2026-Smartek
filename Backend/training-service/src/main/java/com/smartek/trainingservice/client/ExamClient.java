@@ -1,29 +1,31 @@
 package com.smartek.trainingservice.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @FeignClient(name = "exam-service")
 public interface ExamClient {
     
-    @PostMapping("/api/exam-enrollments/unlock-exam")
-    String unlockExamForTraining(@RequestParam Long userId, @RequestParam Long trainingId);
+    @GetMapping("/api/exams/stats/user/{userId}")
+    Map<String, Object> getUserExamStats(@PathVariable Long userId);
     
-    @PostMapping("/api/exam-enrollments/lock-exam")
-    String lockExamForTraining(@RequestParam Long userId, @RequestParam Long trainingId);
+    @PostMapping("/api/exam-enrollments/training/{trainingId}/user/{userId}")
+    void enrollExamForTraining(@PathVariable Long trainingId, @PathVariable Long userId);
     
-    @PostMapping("/api/exam-enrollments/enroll-exam")
-    String enrollExamForTraining(@RequestParam Long userId, @RequestParam Long trainingId);
+    @PostMapping("/api/exam-enrollments/course/{courseId}/user/{userId}")
+    void enrollQuizForCourse(@PathVariable Long courseId, @PathVariable Long userId);
     
-    @PostMapping("/api/exam-enrollments/enroll-quiz")
-    String enrollQuizForCourse(@RequestParam Long userId, @RequestParam Long courseId);
+    @PutMapping("/api/exam-enrollments/training/{trainingId}/user/{userId}/unlock")
+    void unlockExamForTraining(@PathVariable Long trainingId, @PathVariable Long userId);
     
-    @DeleteMapping("/api/exams/by-training/{trainingId}")
+    @PutMapping("/api/exam-enrollments/training/{trainingId}/user/{userId}/lock")
+    void lockExamForTraining(@PathVariable Long trainingId, @PathVariable Long userId);
+    
+    @DeleteMapping("/api/exams/training/{trainingId}")
     void deleteExamsByTrainingId(@PathVariable Long trainingId);
     
-    @DeleteMapping("/api/exams/by-course/{courseId}")
+    @DeleteMapping("/api/exams/course/{courseId}")
     void deleteQuizzesByCourseId(@PathVariable Long courseId);
 }

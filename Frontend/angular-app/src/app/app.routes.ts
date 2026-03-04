@@ -54,6 +54,26 @@ export const routes: Routes = [
     loadComponent: () => import('./features/learner/performance/performance.component').then(m => m.PerformanceComponent),
     canActivate: [authGuard]
   },
+  { 
+    path: 'learner-job-offers', 
+    component: JobOffersLearnerComponent,
+    canActivate: [authGuard]
+  },
+  { 
+    path: 'learner-interviews', 
+    component: InterviewsLearnerComponent,
+    canActivate: [authGuard]
+  },
+  { 
+    path: 'learner/planning', 
+    loadComponent: () => import('./features/learner/planning/learner-planning.component').then(m => m.LearnerPlanningComponent),
+    canActivate: [authGuard]
+  },
+  { 
+    path: 'learner/events', 
+    loadComponent: () => import('./features/learner/events/learner-events.component').then(m => m.LearnerEventsComponent),
+    canActivate: [authGuard]
+  },
   
   // Trainer routes (sans layout, utilise le header du site)
   { 
@@ -92,12 +112,90 @@ export const routes: Routes = [
     canActivate: [permissionGuard],
     data: { roles: [Role.TRAINER] }
   },
+  { 
+    path: 'trainer/planning',
+    loadComponent: () => import('./features/trainer/planning/trainer-planning.component').then(m => m.TrainerPlanningComponent),
+    canActivate: [permissionGuard],
+    data: { roles: [Role.TRAINER] }
+  },
+  { 
+    path: 'trainer/events',
+    loadComponent: () => import('./features/trainer/events/trainer-events.component').then(m => m.TrainerEventsComponent),
+    canActivate: [permissionGuard],
+    data: { roles: [Role.TRAINER] }
+  },
+
+  // RH Smartek routes with layout
+  {
+    path: 'rh-smartek',
+    loadComponent: () => import('./features/rh-smartek/rh-smartek-layout/rh-smartek-layout.component').then(m => m.RhSmartekLayoutComponent),
+    canActivate: [authGuard, permissionGuard],
+    data: { roles: [Role.RH_SMARTEK] },
+    children: [
+      {
+        path: '',
+        redirectTo: 'certifications',
+        pathMatch: 'full'
+      },
+      {
+        path: 'certifications',
+        loadComponent: () => import('./features/rh-smartek/certifications/certifications.component').then(m => m.RhCertificationsComponent)
+      },
+      {
+        path: 'courses',
+        loadComponent: () => import('./features/rh-smartek/courses/courses.component').then(m => m.RhCoursesComponent)
+      },
+      {
+        path: 'exams',
+        loadComponent: () => import('./features/rh-smartek/exams/exams.component').then(m => m.RhExamsComponent)
+      },
+      {
+        path: 'interviews',
+        loadComponent: () => import('./features/rh-smartek/interviews/interviews.component').then(m => m.InterviewsComponent)
+      },
+      {
+        path: 'schedule',
+        loadComponent: () => import('./features/rh-smartek/schedule/schedule.component').then(m => m.ScheduleComponent)
+      },
+      {
+        path: 'events',
+        loadComponent: () => import('./features/rh-smartek/events/events.component').then(m => m.RhEventsComponent)
+      }
+    ]
+  },
+
+  // RH Company routes with layout
+  {
+    path: 'rh-company',
+    loadComponent: () => import('./features/rh-company/rh-company-layout/rh-company-layout.component').then(m => m.RhCompanyLayoutComponent),
+    canActivate: [authGuard, permissionGuard],
+    data: { roles: [Role.RH_COMPANY] },
+    children: [
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./features/rh-company/dashboard/rh-company-dashboard.component').then(m => m.RhCompanyDashboardComponent)
+      },
+      {
+        path: 'offers',
+        component: JobOffersComponent
+      },
+      {
+        path: 'participation',
+        loadComponent: () => import('./features/rh-company/participation/participation.component').then(m => m.CompanyParticipationComponent)
+      }
+    ]
+  },
   
   { 
     path: 'dashboard', 
     component: DashboardLayoutComponent,
     canActivate: [authGuard, permissionGuard],
-    data: { roles: [Role.ADMIN] },
+    data: { roles: [Role.ADMIN, Role.RH_SMARTEK] },
     children: [
       { 
         path: '', 

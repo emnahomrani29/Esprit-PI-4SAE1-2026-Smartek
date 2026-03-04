@@ -8,6 +8,20 @@ spring:
     config:
       enabled: false
     gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:4200"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+              - PATCH
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
       discovery:
         locator:
           enabled: true
@@ -53,22 +67,26 @@ spring:
           uri: lb://exam-service
           predicates:
             - Path=/api/exam-drafts/**
+        - id: analytics
+          uri: lb://exam-service
+          predicates:
+            - Path=/api/analytics/trainer/*/exams
+        - id: analytics-training
+          uri: lb://training-service
+          predicates:
+            - Path=/api/analytics/trainer/*/training**,/api/analytics/trainer/*/trainings
         - id: training-enrollments
           uri: lb://training-service
           predicates:
             - Path=/api/training-enrollments/**
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowed-origins: "http://localhost:4200"
-            allowed-methods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - OPTIONS
-            allowed-headers: "*"
-            allow-credentials: true
+        - id: performance-service
+          uri: lb://training-service
+          predicates:
+            - Path=/api/performance/**
+        - id: pi-service
+          uri: lb://pi-service
+          predicates:
+            - Path=/api/pi/**
 
 eureka:
   client:

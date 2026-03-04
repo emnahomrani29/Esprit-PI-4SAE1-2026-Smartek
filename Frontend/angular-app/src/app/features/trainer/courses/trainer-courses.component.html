@@ -9,14 +9,78 @@
 </app-page-header>
 
 <div class="container mx-auto px-4 py-8">
-  <!-- Action Button -->
-  <div class="flex justify-end mb-8">
-    <button 
-      (click)="openCreateModal()"
-      class="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all flex items-center gap-2">
-      <span class="material-icons">add</span>
-      Create Course
-    </button>
+  <!-- Action Button and Search/Sort -->
+  <div class="mb-8">
+    <div class="flex justify-end mb-4">
+      <button 
+        (click)="openCreateModal()"
+        class="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all flex items-center gap-2">
+        <span class="material-icons">add</span>
+        Create Course
+      </button>
+    </div>
+
+    <!-- Barre de recherche et tri -->
+    <div *ngIf="courses.length > 0" class="bg-white rounded-xl shadow-sm p-6">
+      <div class="flex flex-col md:flex-row gap-4">
+        <!-- Recherche -->
+        <div class="flex-1">
+          <div class="relative">
+            <span class="material-icons absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">search</span>
+            <input
+              type="text"
+              [(ngModel)]="searchTerm"
+              (ngModelChange)="onSearchChange($event)"
+              placeholder="Rechercher un cours..."
+              class="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none transition-colors">
+          </div>
+        </div>
+
+        <!-- Tri -->
+        <div class="flex gap-2">
+          <button
+            (click)="onSortChange('name')"
+            [class.bg-green-600]="sortBy === 'name'"
+            [class.text-white]="sortBy === 'name'"
+            [class.bg-gray-100]="sortBy !== 'name'"
+            [class.text-gray-700]="sortBy !== 'name'"
+            class="px-4 py-3 rounded-lg font-semibold transition-all hover:shadow-md flex items-center gap-2">
+            <span class="material-icons text-sm">sort_by_alpha</span>
+            Nom
+            <span *ngIf="sortBy === 'name'" class="material-icons text-sm" [class.rotate-180]="sortOrder === 'desc'">arrow_upward</span>
+          </button>
+
+          <button
+            (click)="onSortChange('duration')"
+            [class.bg-green-600]="sortBy === 'duration'"
+            [class.text-white]="sortBy === 'duration'"
+            [class.bg-gray-100]="sortBy !== 'duration'"
+            [class.text-gray-700]="sortBy !== 'duration'"
+            class="px-4 py-3 rounded-lg font-semibold transition-all hover:shadow-md flex items-center gap-2">
+            <span class="material-icons text-sm">schedule</span>
+            Durée
+            <span *ngIf="sortBy === 'duration'" class="material-icons text-sm" [class.rotate-180]="sortOrder === 'desc'">arrow_upward</span>
+          </button>
+
+          <button
+            (click)="onSortChange('chapters')"
+            [class.bg-green-600]="sortBy === 'chapters'"
+            [class.text-white]="sortBy === 'chapters'"
+            [class.bg-gray-100]="sortBy !== 'chapters'"
+            [class.text-gray-700]="sortBy !== 'chapters'"
+            class="px-4 py-3 rounded-lg font-semibold transition-all hover:shadow-md flex items-center gap-2">
+            <span class="material-icons text-sm">menu_book</span>
+            Chapitres
+            <span *ngIf="sortBy === 'chapters'" class="material-icons text-sm" [class.rotate-180]="sortOrder === 'desc'">arrow_upward</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Résultats de recherche -->
+      <div *ngIf="searchTerm" class="mt-4 text-sm text-gray-600">
+        {{ displayedCourses.length }} résultat(s) trouvé(s)
+      </div>
+    </div>
   </div>
 
   <!-- Loading -->
@@ -34,7 +98,7 @@
 
   <!-- Courses Grid -->
   <div *ngIf="courses.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <div *ngFor="let course of courses" class="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all overflow-hidden">
+    <div *ngFor="let course of displayedCourses" class="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all overflow-hidden">
       <div class="p-6">
         <div class="flex items-start justify-between mb-4">
           <div class="flex-1">

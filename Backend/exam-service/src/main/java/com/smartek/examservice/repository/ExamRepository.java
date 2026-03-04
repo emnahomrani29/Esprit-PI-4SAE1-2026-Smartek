@@ -24,6 +24,8 @@ public interface ExamRepository extends JpaRepository<Exam, Long> {
     
     List<Exam> findByIsActive(Boolean isActive);
     
+    List<Exam> findByCreatedBy(Long createdBy);
+    
     @EntityGraph(attributePaths = {"questions"})
     @Query("SELECT e FROM Exam e WHERE e.id = :id")
     Optional<Exam> findByIdWithQuestions(Long id);

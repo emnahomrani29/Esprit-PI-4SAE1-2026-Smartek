@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { TrainingService } from '../../../core/services/training.service';
@@ -21,7 +22,7 @@ interface TrainingWithCourses {
 @Component({
   selector: 'app-learner-courses',
   standalone: true,
-  imports: [CommonModule, SafePipe],
+  imports: [CommonModule, FormsModule, SafePipe],
   templateUrl: './learner-courses.component.html',
   styleUrl: './learner-courses.component.scss',
   animations: [
@@ -39,12 +40,18 @@ interface TrainingWithCourses {
 })
 export class LearnerCoursesComponent implements OnInit {
   trainingsWithCourses: TrainingWithCourses[] = [];
+  filteredTrainings: TrainingWithCourses[] = [];
   isLoading = false;
   errorMessage = '';
   showPdfModal = false;
   selectedCourse: CourseInfo | null = null;
   selectedTraining: TrainingWithCourses | null = null;
   pdfUrl: string | null = null;
+
+  // Recherche et tri
+  searchTerm: string = '';
+  sortBy: 'name' | 'progress' | 'date' = 'name';
+  sortOrder: 'asc' | 'desc' = 'asc';
 
   constructor(
     private route: ActivatedRoute,
@@ -57,6 +64,11 @@ export class LearnerCoursesComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadAllTrainingsWithCourses();
+  }
+
+  ngAfterViewInit(): void {
+    // Appliquer les filtres après le chargement initial
+    setTimeout(() => this.applyFiltersAndSort(), 0);
   }
 
   loadAllTrainingsWithCourses(): void {
@@ -95,6 +107,7 @@ export class LearnerCoursesComponent implements OnInit {
               loadedCount++;
               if (loadedCount === enrollments.length) {
                 this.isLoading = false;
+                this.applyFiltersAndSort();
               }
             },
             error: (error) => {
@@ -102,6 +115,7 @@ export class LearnerCoursesComponent implements OnInit {
               loadedCount++;
               if (loadedCount === enrollments.length) {
                 this.isLoading = false;
+                this.applyFiltersAndSort();
               }
             }
           });
@@ -203,7 +217,7 @@ export class LearnerCoursesComponent implements OnInit {
       next: () => {
         console.log('Progress updated successfully');
       },
-      error: (error: any) => {
+      error: (error) => {
         console.error('Error updating progress:', error);
       }
     });
@@ -265,5 +279,56 @@ export class LearnerCoursesComponent implements OnInit {
 
   collapseAll(): void {
     this.trainingsWithCourses.forEach(t => t.isExpanded = false);
+  }
+
+  // Recherche et tri
+  onSearchChange(term: string): void {
+    this.searchTerm = term;
+    this.applyFiltersAndSort();
+  }
+
+  onSortChange(sortBy: 'name' | 'progress' | 'date'): void {
+    if (this.sortBy === sortBy) {
+      this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortBy = sortBy;
+      this.sortOrder = 'asc';
+    }
+    this.applyFiltersAndSort();
+  }
+
+  applyFiltersAndSort(): void {
+    // Filtrer par recherche
+    let filtered = this.trainingsWithCourses.filter(t => 
+      t.training.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+      t.courses.some(c => c.title?.toLowerCase().includes(this.searchTerm.toLowerCase()))
+    );
+
+    // Trier
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (this.sortBy) {
+        case 'name':
+          comparison = a.training.title.localeCompare(b.training.title);
+          break;
+        case 'progress':
+          comparison = a.progress - b.progress;
+          break;
+        case 'date':
+          const dateA = a.enrollment.enrolledAt ? new Date(a.enrollment.enrolledAt).getTime() : 0;
+          const dateB = b.enrollment.enrolledAt ? new Date(b.enrollment.enrolledAt).getTime() : 0;
+          comparison = dateA - dateB;
+          break;
+      }
+      
+      return this.sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    this.filteredTrainings = filtered;
+  }
+
+  get displayedTrainings(): TrainingWithCourses[] {
+    return this.filteredTrainings.length > 0 || this.searchTerm ? this.filteredTrainings : this.trainingsWithCourses;
   }
 }

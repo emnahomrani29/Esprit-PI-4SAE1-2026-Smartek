@@ -7,29 +7,33 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/exam-drafts")
+@RequestMapping("/api/exams")
 @RequiredArgsConstructor
 public class ExamDraftController {
     private final ExamDraftService examDraftService;
 
-    @PostMapping("/save")
-    public ResponseEntity<String> saveDraft(@RequestBody ExamDraftDTO draftDTO) {
+    @PostMapping("/{examId}/draft")
+    public ResponseEntity<ExamDraftDTO> saveDraft(
+            @PathVariable Long examId,
+            @RequestBody ExamDraftDTO draftDTO) {
+        draftDTO.setExamId(examId);
         examDraftService.saveDraft(draftDTO);
-        return ResponseEntity.ok("Brouillon sauvegardé");
+        return ResponseEntity.ok(draftDTO);
     }
 
-    @GetMapping("/{examId}/user/{userId}")
+    @GetMapping("/{examId}/draft")
     public ResponseEntity<ExamDraftDTO> getDraft(
             @PathVariable Long examId,
-            @PathVariable Long userId) {
+            @RequestParam Long userId) {
         return ResponseEntity.ok(examDraftService.getDraft(examId, userId));
     }
 
-    @DeleteMapping("/{examId}/user/{userId}")
-    public ResponseEntity<String> deleteDraft(
+    @DeleteMapping("/{examId}/draft")
+    public ResponseEntity<Void> deleteDraft(
             @PathVariable Long examId,
-            @PathVariable Long userId) {
+            @RequestParam Long userId) {
         examDraftService.deleteDraft(examId, userId);
-        return ResponseEntity.ok("Brouillon supprimé");
+        return ResponseEntity.ok().build();
     }
 }
+    

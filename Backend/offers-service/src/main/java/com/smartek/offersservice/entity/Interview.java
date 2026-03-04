@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -20,61 +22,64 @@ public class Interview {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(nullable = false)
-    private Long applicationId;
-    
-    @Column(nullable = false)
-    private Long offerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "application_id", nullable = false)
+    private Application application;
     
     @Column(nullable = false)
     private Long learnerId;
     
-    @Column(nullable = false)
     private String learnerName;
     
-    @Column(nullable = false)
     private String learnerEmail;
     
     @Column(nullable = false)
     private LocalDateTime interviewDate;
     
-    @Column(nullable = false)
-    private String location; // Lieu de l'entretien (adresse ou "En ligne")
+    private String location;
     
-    @Column(length = 500)
-    private String meetingLink; // Lien de visioconférence si en ligne
+    private String meetingLink;
     
-    @Column(length = 1000)
-    private String notes; // Notes pour l'entretien
+    @Column(columnDefinition = "TEXT")
+    private String notes;
     
-    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private InterviewStatus status;
-    
     @Column(nullable = false)
-    private Long createdBy; // ID du RH qui a créé l'entretien
+    @Builder.Default
+    private InterviewStatus status = InterviewStatus.SCHEDULED;
     
+    private Long createdBy;
+    
+    @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
+    @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
     
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-    
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-    
     public enum InterviewStatus {
-        SCHEDULED,    // Planifié
-        COMPLETED,    // Terminé
-        CANCELLED,    // Annulé
-        RESCHEDULED   // Reporté
+        SCHEDULED,
+        COMPLETED,
+        CANCELLED,
+        RESCHEDULED
+    }
+    
+    // Helper methods to get IDs from relationships
+    public Long getApplicationId() {
+        return application != null ? application.getId() : null;
+    }
+    
+    public Long getOfferId() {
+        return application != null && application.getOffer() != null ? application.getOffer().getId() : null;
+    }
+    
+    public void setApplicationId(Long applicationId) {
+        // This method is kept for DTO mapping but doesn't set the field
+        // The actual application relationship should be set via setApplication()
+    }
+    
+    public void setOfferId(Long offerId) {
+        // This method is kept for DTO mapping but doesn't set the field
     }
 }

@@ -28,7 +28,7 @@ public class ChapterService {
     
     private final ChapterRepository chapterRepository;
     private final CourseRepository courseRepository;
-    private static final String UPLOAD_DIR = "uploads/pdfs/";
+    private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/pdfs/";
     
     @Transactional
     public ChapterResponse createChapter(Long courseId, ChapterRequest request) {
@@ -78,6 +78,9 @@ public class ChapterService {
     
     @Transactional
     public ChapterResponse uploadPdf(Long chapterId, MultipartFile file) throws IOException {
+        log.info("Début upload PDF - ChapterId: {}, FileName: {}, Size: {}", 
+                 chapterId, file.getOriginalFilename(), file.getSize());
+        
         Chapter chapter = chapterRepository.findById(chapterId)
                 .orElseThrow(() -> new RuntimeException("Chapitre non trouvé avec l'ID: " + chapterId));
         
@@ -85,13 +88,19 @@ public class ChapterService {
             throw new RuntimeException("Le fichier est vide");
         }
         
-        if (!file.getContentType().equals("application/pdf")) {
-            throw new RuntimeException("Seuls les fichiers PDF sont acceptés");
+        String contentType = file.getContentType();
+        log.info("Content-Type du fichier: {}", contentType);
+        
+        if (contentType == null || !contentType.equals("application/pdf")) {
+            throw new RuntimeException("Seuls les fichiers PDF sont acceptés. Type reçu: " + contentType);
         }
         
         // Créer le répertoire s'il n'existe pas
         Path uploadPath = Paths.get(UPLOAD_DIR);
+        log.info("Chemin d'upload: {}", uploadPath.toAbsolutePath());
+        
         if (!Files.exists(uploadPath)) {
+            log.info("Création du répertoire: {}", uploadPath);
             Files.createDirectories(uploadPath);
         }
         
@@ -102,6 +111,8 @@ public class ChapterService {
         
         // Sauvegarder le fichier
         Path filePath = uploadPath.resolve(uniqueFilename);
+        log.info("Sauvegarde du fichier vers: {}", filePath.toAbsolutePath());
+        
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
         
         // Mettre à jour le chapitre

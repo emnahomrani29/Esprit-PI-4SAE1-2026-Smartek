@@ -114,6 +114,76 @@ public class ExamEnrollmentController {
             return ResponseEntity.status(403).body(new AccessResponse(false, e.getMessage()));
         }
     }
+    
+    @PostMapping("/{examId}/start")
+    public ResponseEntity<?> startExam(
+            @PathVariable Long examId,
+            @RequestParam Long userId) {
+        log.info("Démarrage de l'examen {} pour userId={}", examId, userId);
+        try {
+            examEnrollmentService.startExam(userId, examId);
+            return ResponseEntity.ok().body(new AccessResponse(true, "Examen démarré"));
+        } catch (Exception e) {
+            log.error("Erreur lors du démarrage: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new AccessResponse(false, e.getMessage()));
+        }
+    }
+    
+    @PostMapping("/{examId}/retake")
+    public ResponseEntity<?> retakeExam(
+            @PathVariable Long examId,
+            @RequestParam Long userId) {
+        log.info("Reprise de l'examen {} pour userId={}", examId, userId);
+        try {
+            examEnrollmentService.retakeExam(userId, examId);
+            return ResponseEntity.ok().body(new AccessResponse(true, "Vous pouvez repasser l'examen"));
+        } catch (Exception e) {
+            log.error("Erreur lors de la reprise: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new AccessResponse(false, e.getMessage()));
+        }
+    }
+    
+    @GetMapping("/{examId}/time-remaining")
+    public ResponseEntity<?> getTimeRemaining(
+            @PathVariable Long examId,
+            @RequestParam Long userId) {
+        log.info("Récupération du temps restant pour l'examen {} et userId={}", examId, userId);
+        try {
+            int timeRemaining = examEnrollmentService.getTimeRemaining(userId, examId);
+            return ResponseEntity.ok().body(new TimeRemainingResponse(timeRemaining));
+        } catch (Exception e) {
+            log.error("Erreur lors de la récupération du temps: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new AccessResponse(false, e.getMessage()));
+        }
+    }
+    
+    @PostMapping("/{examId}/pause")
+    public ResponseEntity<?> pauseExam(
+            @PathVariable Long examId,
+            @RequestParam Long userId) {
+        log.info("Mise en pause de l'examen {} pour userId={}", examId, userId);
+        try {
+            examEnrollmentService.pauseExam(userId, examId);
+            return ResponseEntity.ok().body(new AccessResponse(true, "Examen mis en pause"));
+        } catch (Exception e) {
+            log.error("Erreur lors de la mise en pause: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new AccessResponse(false, e.getMessage()));
+        }
+    }
+    
+    @PostMapping("/{examId}/resume")
+    public ResponseEntity<?> resumeExam(
+            @PathVariable Long examId,
+            @RequestParam Long userId) {
+        log.info("Reprise de l'examen {} pour userId={}", examId, userId);
+        try {
+            examEnrollmentService.resumeExam(userId, examId);
+            return ResponseEntity.ok().body(new AccessResponse(true, "Examen repris"));
+        } catch (Exception e) {
+            log.error("Erreur lors de la reprise: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new AccessResponse(false, e.getMessage()));
+        }
+    }
 }
 
 class AccessResponse {
@@ -139,5 +209,21 @@ class AccessResponse {
     
     public void setMessage(String message) {
         this.message = message;
+    }
+}
+
+class TimeRemainingResponse {
+    private int timeRemaining;
+    
+    public TimeRemainingResponse(int timeRemaining) {
+        this.timeRemaining = timeRemaining;
+    }
+    
+    public int getTimeRemaining() {
+        return timeRemaining;
+    }
+    
+    public void setTimeRemaining(int timeRemaining) {
+        this.timeRemaining = timeRemaining;
     }
 }

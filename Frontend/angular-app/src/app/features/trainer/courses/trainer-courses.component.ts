@@ -25,6 +25,7 @@ interface ChapterFormData {
 })
 export class TrainerCoursesComponent implements OnInit {
   courses: Course[] = [];
+  filteredCourses: Course[] = [];
   courseForm: FormGroup;
   chapterForm: FormGroup;
   isEditMode = false;
@@ -36,6 +37,11 @@ export class TrainerCoursesComponent implements OnInit {
   chapters: ChapterFormData[] = [];
   selectedChapterFile: File | null = null;
   editingChapterIndex: number | null = null;
+  
+  // Recherche et tri
+  searchTerm: string = '';
+  sortBy: 'name' | 'duration' | 'chapters' = 'name';
+  sortOrder: 'asc' | 'desc' = 'asc';
   
   // Chapter management modal
   showChaptersListModal = false;
@@ -83,6 +89,7 @@ export class TrainerCoursesComponent implements OnInit {
         next: (courses) => {
           this.courses = courses;
           this.loading = false;
+          this.applyFiltersAndSort();
         },
         error: (error) => {
           console.error('Error loading courses:', error);
@@ -90,6 +97,59 @@ export class TrainerCoursesComponent implements OnInit {
         }
       });
     }
+  }
+
+  // Recherche et tri
+  onSearchChange(term: string): void {
+    this.searchTerm = term;
+    this.applyFiltersAndSort();
+  }
+
+  onSortChange(sortBy: 'name' | 'duration' | 'chapters'): void {
+    if (this.sortBy === sortBy) {
+      this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortBy = sortBy;
+      this.sortOrder = 'asc';
+    }
+    this.applyFiltersAndSort();
+  }
+
+  applyFiltersAndSort(): void {
+    // Filtrer par recherche
+    let filtered = this.courses.filter(c => 
+      c.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+      (c.content && c.content.toLowerCase().includes(this.searchTerm.toLowerCase()))
+    );
+
+    // Trier
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (this.sortBy) {
+        case 'name':
+          comparison = a.title.localeCompare(b.title);
+          break;
+        case 'duration':
+          const durationA = parseInt(a.duration) || 0;
+          const durationB = parseInt(b.duration) || 0;
+          comparison = durationA - durationB;
+          break;
+        case 'chapters':
+          const chaptersA = a.chapters?.length || 0;
+          const chaptersB = b.chapters?.length || 0;
+          comparison = chaptersA - chaptersB;
+          break;
+      }
+      
+      return this.sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    this.filteredCourses = filtered;
+  }
+
+  get displayedCourses(): Course[] {
+    return this.filteredCourses.length > 0 || this.searchTerm ? this.filteredCourses : this.courses;
   }
 
   openCreateModal(): void {

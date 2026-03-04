@@ -16,16 +16,21 @@ import java.util.stream.Collectors;
 public class ApplicationService {
     
     private final ApplicationRepository applicationRepository;
+    private final com.smartek.offersservice.repository.OfferRepository offerRepository;
     
     @Transactional
     public ApplicationResponse applyToOffer(ApplicationRequest request) {
         // Vérifier si l'utilisateur a déjà postulé
-        if (applicationRepository.existsByOfferIdAndLearnerId(request.getOfferId(), request.getLearnerId())) {
+        if (applicationRepository.existsByOffer_IdAndLearnerId(request.getOfferId(), request.getLearnerId())) {
             throw new RuntimeException("Vous avez déjà postulé à cette offre");
         }
         
+        // Charger l'offre
+        com.smartek.offersservice.entity.Offer offer = offerRepository.findById(request.getOfferId())
+                .orElseThrow(() -> new RuntimeException("Offre non trouvée"));
+        
         Application application = new Application();
-        application.setOfferId(request.getOfferId());
+        application.setOffer(offer);
         application.setLearnerId(request.getLearnerId());
         application.setLearnerName(request.getLearnerName());
         application.setLearnerEmail(request.getLearnerEmail());
@@ -39,7 +44,7 @@ public class ApplicationService {
     }
     
     public List<ApplicationResponse> getApplicationsByOffer(Long offerId) {
-        return applicationRepository.findByOfferId(offerId).stream()
+        return applicationRepository.findByOffer_Id(offerId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -51,7 +56,7 @@ public class ApplicationService {
     }
     
     public boolean hasApplied(Long offerId, Long learnerId) {
-        return applicationRepository.existsByOfferIdAndLearnerId(offerId, learnerId);
+        return applicationRepository.existsByOffer_IdAndLearnerId(offerId, learnerId);
     }
     
     @Transactional

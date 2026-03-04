@@ -230,12 +230,23 @@ public class ExamResultService {
             else if (answerDTO.getSelectedAnswer() != null && !answerDTO.getSelectedAnswer().trim().isEmpty()) {
                 System.out.println("Using selectedAnswer (text)");
                 
+                String selectedAnswer = answerDTO.getSelectedAnswer().trim();
+                
+                // Pour TRUE_FALSE, normaliser les valeurs true/false en Vrai/Faux
+                if ("TRUE_FALSE".equals(question.getQuestionType())) {
+                    if ("true".equalsIgnoreCase(selectedAnswer)) {
+                        selectedAnswer = "Vrai";
+                    } else if ("false".equalsIgnoreCase(selectedAnswer)) {
+                        selectedAnswer = "Faux";
+                    }
+                }
+                
                 // Chercher l'option qui correspond au texte sélectionné
                 for (int i = 0; i < options.size(); i++) {
                     QuestionOption option = options.get(i);
                     System.out.println("Option " + i + ": " + option.getOptionText() + " (isCorrect: " + option.getIsCorrect() + ")");
                     
-                    if (option.getOptionText().trim().equalsIgnoreCase(answerDTO.getSelectedAnswer().trim())) {
+                    if (option.getOptionText().trim().equalsIgnoreCase(selectedAnswer)) {
                         System.out.println("Found matching option at index " + i);
                         boolean isCorrect = option.getIsCorrect();
                         System.out.println("Answer is " + (isCorrect ? "CORRECT" : "INCORRECT"));

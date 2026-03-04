@@ -251,9 +251,14 @@ export class TrainerTrainingManagementComponent implements OnInit, OnDestroy {
 
     this.loading = true;
     
+    // Récupérer l'ID du trainer connecté
+    const userInfo = this.authService.getUserInfo();
+    const trainerId = userInfo?.userId;
+    
     const trainingData: TrainingCreateRequest = {
       ...this.trainingForm.value,
-      courseIds: this.selectedCourseIds
+      courseIds: this.selectedCourseIds,
+      createdBy: trainerId // Ajouter l'ID du trainer
     };
 
     if (this.isEditMode && this.selectedTrainingId) {

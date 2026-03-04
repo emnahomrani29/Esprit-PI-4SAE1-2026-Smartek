@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap, map, catchError, of } from 'rxjs';
 import { Router } from '@angular/router';
+import { environment } from '../../../environments/environment';
 
 export interface RegisterRequest {
   firstName: string;
@@ -33,7 +34,7 @@ export interface AuthResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8090/api/auth';
+  private apiUrl = `${environment.apiUrl}/auth`;
 
   constructor(
     private http: HttpClient,
@@ -58,16 +59,10 @@ export class AuthService {
     );
   }
 
-  logout(redirectTo?: string): void {
+  logout(): void {
     localStorage.removeItem('token');
     localStorage.removeItem('userInfo');
-    
-    // Si une URL de redirection est spécifiée, l'utiliser, sinon aller à la page d'accueil
-    if (redirectTo) {
-      this.router.navigate([redirectTo]);
-    } else {
-      this.router.navigate(['/']);
-    }
+    this.router.navigate(['/']);
   }
 
   private saveToken(token: string): void {

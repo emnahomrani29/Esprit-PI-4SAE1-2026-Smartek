@@ -13,100 +13,136 @@ export interface MenuItem {
 }
 
 export const MENU_ITEMS: MenuItem[] = [
-  // Dashboard - ADMIN only
+  // Dashboard - Accessible à tous
   {
     label: 'Dashboard',
     icon: 'dashboard',
     route: '/dashboard',
-    roles: [Role.ADMIN]
+    permissions: []
   },
 
-  // Course Management - ADMIN
+  // Course Management - RH_SMARTEK & TRAINER
   {
     label: 'Course Management',
     icon: 'school',
     route: '/dashboard/courses',
-    roles: [Role.ADMIN]
+    roles: [Role.RH_SMARTEK, Role.TRAINER]
   },
 
-  // Exam Management - ADMIN
+  // My Courses - LEARNER
+  {
+    label: 'My Courses',
+    icon: 'book',
+    route: '/dashboard/my-courses',
+    roles: [Role.LEARNER],
+    permissions: [Permission.COURSES_VIEW]
+  },
+
+  // Exam Management - RH_SMARTEK & TRAINER
   {
     label: 'Exam Management',
     icon: 'assignment',
     route: '/dashboard/exams',
-    roles: [Role.ADMIN]
+    roles: [Role.RH_SMARTEK, Role.TRAINER]
   },
 
-  // Training Management - ADMIN
+  // My Exams - LEARNER
+  {
+    label: 'My Exams',
+    icon: 'quiz',
+    route: '/dashboard/my-exams',
+    roles: [Role.LEARNER],
+    permissions: [Permission.EXAMS_TAKE]
+  },
+
+  // Training Management - TRAINER, RH_SMARTEK
   {
     label: 'Training Management',
     icon: 'fitness_center',
     route: '/dashboard/training',
-    roles: [Role.ADMIN]
+    permissions: [Permission.TRAINING_VIEW, Permission.TRAINING_CREATE]
   },
 
-  // Certification & Badge Management - ADMIN
+  // My Training - LEARNER
+  {
+    label: 'My Training',
+    icon: 'model_training',
+    route: '/dashboard/my-training',
+    roles: [Role.LEARNER],
+    permissions: [Permission.TRAINING_VIEW]
+  },
+
+  // Certification & Badge Management - RH_SMARTEK
   {
     label: 'Certifications & Badges',
     icon: 'workspace_premium',
     route: '/dashboard/certifications',
-    roles: [Role.ADMIN]
+    permissions: [Permission.CERTIFICATIONS_VIEW, Permission.BADGES_VIEW]
   },
 
-  // Skill Evidence - ADMIN
+  // My Certifications - LEARNER
+  {
+    label: 'My Certifications',
+    icon: 'verified',
+    route: '/dashboard/my-certifications',
+    roles: [Role.LEARNER],
+    permissions: [Permission.CERTIFICATIONS_VIEW]
+  },
+
+  // Skill Evidence - LEARNER, TRAINER, RH_SMARTEK
   {
     label: 'Skill Evidence',
     icon: 'psychology',
     route: '/dashboard/skill-evidence',
-    roles: [Role.ADMIN]
+    permissions: [Permission.SKILL_EVIDENCE_VIEW, Permission.SKILL_EVIDENCE_VIEW_ALL]
   },
 
-  // Interview Management - ADMIN
+  // Interview Management - RH_COMPANY, RH_SMARTEK
   {
     label: 'Interview Management',
     icon: 'event_seat',
     route: '/dashboard/interviews',
-    roles: [Role.ADMIN]
+    permissions: [Permission.INTERVIEWS_VIEW, Permission.INTERVIEWS_CREATE]
   },
 
-  // Job Offers - ADMIN
+  // Job Offers - RH_COMPANY
   {
     label: 'Job Offers',
     icon: 'work',
     route: '/dashboard/job-offers',
-    roles: [Role.ADMIN]
+    permissions: [Permission.JOB_OFFERS_VIEW, Permission.JOB_OFFERS_CREATE]
   },
 
-  // Planning/Schedule - ADMIN
+  // Planning/Schedule - TRAINER, RH_COMPANY
   {
     label: 'Planning',
     icon: 'calendar_month',
     route: '/dashboard/planning',
-    roles: [Role.ADMIN]
+    permissions: [Permission.PLANNING_VIEW, Permission.PLANNING_CREATE]
   },
 
-  // Event Management - ADMIN
+  // Event Management - TRAINER, RH_COMPANY, RH_SMARTEK
   {
     label: 'Event Management',
     icon: 'event',
     route: '/dashboard/events',
-    roles: [Role.ADMIN]
+    permissions: [Permission.EVENTS_VIEW, Permission.EVENTS_CREATE]
   },
 
-  // User Management - ADMIN
+  // User Management - ADMIN, RH_SMARTEK, TRAINER
   {
     label: 'User Management',
     icon: 'people',
     route: '/dashboard/users',
-    roles: [Role.ADMIN]
+    permissions: [Permission.USERS_VIEW]
   },
 
-  // Company Management - ADMIN
+  // Company Management - ADMIN, RH_SMARTEK
   {
     label: 'Company Management',
     icon: 'business',
     route: '/dashboard/companies',
-    roles: [Role.ADMIN]
+    permissions: [Permission.COMPANIES_VIEW, Permission.COMPANIES_CREATE]
   },
 
   // Sponsor Management - ADMIN
@@ -114,31 +150,31 @@ export const MENU_ITEMS: MenuItem[] = [
     label: 'Sponsor Management',
     icon: 'handshake',
     route: '/dashboard/sponsors',
-    roles: [Role.ADMIN]
+    permissions: [Permission.SPONSORS_VIEW]
   },
 
-  // Contact Management - ADMIN
+  // Contact Management - ADMIN, RH_SMARTEK
   {
     label: 'Contact Management',
     icon: 'contacts',
     route: '/dashboard/contacts',
-    roles: [Role.ADMIN]
+    permissions: [Permission.CONTACTS_VIEW]
   },
 
-  // Participation - ADMIN
+  // Participation - ADMIN, RH_SMARTEK, SPONSOR
   {
     label: 'Participation',
     icon: 'groups',
     route: '/dashboard/participation',
-    roles: [Role.ADMIN]
+    permissions: [Permission.PARTICIPATION_VIEW, Permission.PARTICIPATION_VIEW_ALL]
   },
 
-  // Learning Path - ADMIN
+  // Learning Path - RH_SMARTEK, LEARNER
   {
     label: 'Learning Paths',
     icon: 'route',
     route: '/dashboard/learning-paths',
-    roles: [Role.ADMIN]
+    permissions: [Permission.LEARNING_PATH_VIEW]
   },
 
   // Divider
@@ -160,15 +196,15 @@ export const MENU_ITEMS: MenuItem[] = [
     label: 'System Settings',
     icon: 'settings',
     route: '/dashboard/settings',
-    roles: [Role.ADMIN]
+    permissions: [Permission.SYSTEM_SETTINGS]
   },
 
-  // Profile - ADMIN
+  // Profile - Tous
   {
     label: 'Profile',
     icon: 'person',
     route: '/dashboard/profile',
-    roles: [Role.ADMIN]
+    permissions: [Permission.PROFILE_VIEW]
   },
 
   // Divider
@@ -185,11 +221,11 @@ export const MENU_ITEMS: MenuItem[] = [
     header: 'Pages'
   },
 
-  // Back to Website - ADMIN
+  // Back to Website - Tous
   {
     label: 'Back to Website',
     icon: 'home',
     route: '/',
-    roles: [Role.ADMIN]
+    permissions: []
   }
 ];

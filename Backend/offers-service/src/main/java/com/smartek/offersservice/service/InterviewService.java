@@ -36,8 +36,7 @@ public class InterviewService {
         }
         
         Interview interview = Interview.builder()
-                .applicationId(request.getApplicationId())
-                .offerId(application.getOfferId())
+                .application(application)
                 .learnerId(application.getLearnerId())
                 .learnerName(application.getLearnerName())
                 .learnerEmail(application.getLearnerEmail())
@@ -57,7 +56,7 @@ public class InterviewService {
     
     public List<InterviewResponse> getInterviewsByOffer(Long offerId) {
         log.info("Fetching interviews for offer ID: {}", offerId);
-        return interviewRepository.findByOfferId(offerId).stream()
+        return interviewRepository.findByApplication_Offer_Id(offerId).stream()
                 .map(InterviewResponse::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -71,7 +70,7 @@ public class InterviewService {
     
     public List<InterviewResponse> getInterviewsByApplication(Long applicationId) {
         log.info("Fetching interviews for application ID: {}", applicationId);
-        return interviewRepository.findByApplicationId(applicationId).stream()
+        return interviewRepository.findByApplication_Id(applicationId).stream()
                 .map(InterviewResponse::fromEntity)
                 .collect(Collectors.toList());
     }

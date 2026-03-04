@@ -1,66 +1,62 @@
 package com.smartek.offersservice.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "offers")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Offer {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @NotBlank(message = "Title is required")
     @Column(nullable = false)
     private String title;
     
-    @NotBlank(message = "Description is required")
     @Column(columnDefinition = "TEXT")
     private String description;
     
-    @NotBlank(message = "Company name is required")
     @Column(nullable = false)
     private String companyName;
     
-    @NotBlank(message = "Location is required")
+    @Column(nullable = false)
+    private Long companyId;
+    
+    @Column(nullable = false)
     private String location;
     
-    @NotBlank(message = "Contract type is required")
-    private String contractType; // CDI, CDD, Stage, Alternance, etc.
+    @Column(nullable = false)
+    private String contractType;
     
     private String salary;
     
-    @NotNull(message = "Company ID is required")
     @Column(nullable = false)
-    private Long companyId; // ID de l'entreprise qui a créé l'offre
+    @Builder.Default
+    private String status = "ACTIVE";
     
-    @Column(nullable = false)
-    private String status = "ACTIVE"; // ACTIVE, CLOSED, DRAFT
+    @OneToMany(mappedBy = "offer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Application> applications = new ArrayList<>();
     
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
-    @Column(name = "updated_at")
+    @UpdateTimestamp
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
-    
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-    
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 }

@@ -70,20 +70,62 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
 
   loadExam(): void {
     this.isLoading = true;
+    const currentUser = this.authService.getUserInfo();
+    
     this.examService.getExamById(this.examId).subscribe({
       next: (exam) => {
         this.exam = exam;
-        this.timeRemaining = exam.duration * 60; // Convert to seconds
-        this.startTimer();
         
-        // Charger le brouillon s'il existe
-        this.loadDraft();
-        
-        this.isLoading = false;
+        // Récupérer le temps restant depuis le serveur
+        if (currentUser?.userId) {
+          // D'abord, reprendre l'examen (si en pause)
+          this.examService.resumeExam(this.examId, currentUser.userId).subscribe({
+            next: () => {
+              console.log('Examen repris');
+              this.loadTimeAndStart(currentUser.userId);
+            },
+            error: (error) => {
+              console.log('Pas besoin de reprendre (première fois ou erreur):', error);
+              this.loadTimeAndStart(currentUser.userId);
+            }
+          });
+        } else {
+          // Pas d'utilisateur connecté, utiliser la durée totale
+          this.timeRemaining = exam.duration * 60;
+          this.startTimer();
+          this.loadDraft();
+          this.isLoading = false;
+        }
       },
       error: (error) => {
         console.error('Error loading exam:', error);
         this.errorMessage = 'Erreur lors du chargement de l\'examen';
+        this.isLoading = false;
+      }
+    });
+  }
+
+  private loadTimeAndStart(userId: number): void {
+    this.examService.getTimeRemaining(this.examId, userId).subscribe({
+      next: (response) => {
+        this.timeRemaining = response.timeRemaining;
+        
+        // Si le temps est écoulé, soumettre automatiquement
+        if (this.timeRemaining <= 0) {
+          this.autoSubmit();
+          return;
+        }
+        
+        this.startTimer();
+        this.loadDraft();
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading time remaining:', error);
+        // Fallback sur la durée totale
+        this.timeRemaining = this.exam!.duration * 60;
+        this.startTimer();
+        this.loadDraft();
         this.isLoading = false;
       }
     });
@@ -238,9 +280,19 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    const currentUser = this.authService.getUserInfo();
+    
     // Sauvegarder une dernière fois avant de quitter
     if (this.userAnswers.size > 0 && !this.isSubmitting) {
       this.saveDraftNow();
+    }
+    
+    // Mettre en pause si pas en train de soumettre
+    if (!this.isSubmitting && currentUser?.userId) {
+      this.examService.pauseExam(this.examId, currentUser.userId).subscribe({
+        next: () => console.log('Examen mis en pause automatiquement'),
+        error: (error) => console.error('Error pausing exam:', error)
+      });
     }
     
     if (this.timerInterval) {
@@ -248,5 +300,42 @@ export class ExamTakeComponent implements OnInit, OnDestroy {
     }
     
     this.saveSubject.complete();
+  }
+
+  exitExam(): void {
+    const currentUser = this.authService.getUserInfo();
+    
+    if (this.userAnswers.size > 0) {
+      if (!confirm('Voulez-vous quitter le quiz ? Vos réponses seront sauvegardées et vous pourrez reprendre plus tard.')) {
+        return;
+      }
+      
+      // Sauvegarder le brouillon avant de quitter
+      this.saveDraftNow();
+    }
+    
+    // Arrêter le timer
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+    }
+    
+    // Mettre en pause l'examen
+    if (currentUser?.userId) {
+      this.examService.pauseExam(this.examId, currentUser.userId).subscribe({
+        next: () => {
+          console.log('Examen mis en pause');
+          // Retourner à la liste des examens
+          this.router.navigate(['/learner-exams']);
+        },
+        error: (error) => {
+          console.error('Error pausing exam:', error);
+          // Retourner quand même
+          this.router.navigate(['/learner-exams']);
+        }
+      });
+    } else {
+      // Retourner à la liste des examens
+      this.router.navigate(['/learner-exams']);
+    }
   }
 }

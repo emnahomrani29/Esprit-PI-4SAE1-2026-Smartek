@@ -13,6 +13,82 @@
       <p class="text-gray-600 text-xl">Test your knowledge and validate your skills</p>
     </div>
 
+    <!-- Barre de recherche et tri -->
+    <div *ngIf="!isLoading && (quizzes.length > 0 || exams.length > 0)" class="mb-8 bg-white rounded-2xl shadow-lg p-6 animate-fade-in">
+      <div class="flex flex-col md:flex-row gap-4">
+        <!-- Recherche -->
+        <div class="flex-1">
+          <div class="relative">
+            <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input
+              type="text"
+              [(ngModel)]="searchTerm"
+              (ngModelChange)="onSearchChange($event)"
+              placeholder="Rechercher un examen ou quiz..."
+              class="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors">
+          </div>
+        </div>
+
+        <!-- Tri -->
+        <div class="flex gap-2">
+          <button
+            (click)="onSortChange('name')"
+            [class.bg-blue-600]="sortBy === 'name'"
+            [class.text-white]="sortBy === 'name'"
+            [class.bg-gray-100]="sortBy !== 'name'"
+            [class.text-gray-700]="sortBy !== 'name'"
+            class="px-4 py-3 rounded-xl font-semibold transition-all hover:shadow-md flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
+            </svg>
+            Nom
+            <svg *ngIf="sortBy === 'name'" class="w-4 h-4" [class.rotate-180]="sortOrder === 'desc'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+            </svg>
+          </button>
+
+          <button
+            (click)="onSortChange('status')"
+            [class.bg-blue-600]="sortBy === 'status'"
+            [class.text-white]="sortBy === 'status'"
+            [class.bg-gray-100]="sortBy !== 'status'"
+            [class.text-gray-700]="sortBy !== 'status'"
+            class="px-4 py-3 rounded-xl font-semibold transition-all hover:shadow-md flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Statut
+            <svg *ngIf="sortBy === 'status'" class="w-4 h-4" [class.rotate-180]="sortOrder === 'desc'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+            </svg>
+          </button>
+
+          <button
+            (click)="onSortChange('score')"
+            [class.bg-blue-600]="sortBy === 'score'"
+            [class.text-white]="sortBy === 'score'"
+            [class.bg-gray-100]="sortBy !== 'score'"
+            [class.text-gray-700]="sortBy !== 'score'"
+            class="px-4 py-3 rounded-xl font-semibold transition-all hover:shadow-md flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            Score
+            <svg *ngIf="sortBy === 'score'" class="w-4 h-4" [class.rotate-180]="sortOrder === 'desc'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Résultats de recherche -->
+      <div *ngIf="searchTerm" class="mt-4 text-sm text-gray-600">
+        {{ displayedQuizzes.length + displayedExams.length }} résultat(s) trouvé(s)
+      </div>
+    </div>
+
     <!-- Loading State -->
     <div *ngIf="isLoading" class="flex justify-center items-center py-20 animate-fade-in">
       <div class="relative">
@@ -48,7 +124,7 @@
         </h2>
 
         <div *ngIf="quizzes.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div *ngFor="let quiz of quizzes; let i = index" 
+          <div *ngFor="let quiz of displayedQuizzes; let i = index" 
                class="exam-card bg-white rounded-2xl shadow-lg overflow-hidden animate-scale-in"
                [class.stagger-1]="i % 6 === 0"
                [class.stagger-2]="i % 6 === 1"
@@ -119,16 +195,18 @@
 
               <!-- Action Button -->
               <button 
-                (click)="startExam(quiz)"
-                [disabled]="quiz.isLocked"
-                [class.opacity-50]="quiz.isLocked"
-                [class.cursor-not-allowed]="quiz.isLocked"
+                (click)="quiz.hasAttempted ? retakeExam(quiz) : startExam(quiz)"
+                [disabled]="quiz.isLocked || ((quiz.attemptsCount ?? 0) >= 2)"
+                [class.opacity-50]="quiz.isLocked || ((quiz.attemptsCount ?? 0) >= 2)"
+                [class.cursor-not-allowed]="quiz.isLocked || ((quiz.attemptsCount ?? 0) >= 2)"
                 class="btn-exam w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-6 rounded-xl font-semibold flex items-center justify-center group disabled:transform-none disabled:hover:shadow-none">
                 <svg class="w-5 h-5 mr-2 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                <span class="group-hover:tracking-wide transition-all">{{ quiz.hasAttempted ? 'Repasser le quiz' : 'Commencer le quiz' }}</span>
+                <span class="group-hover:tracking-wide transition-all">
+                  {{ ((quiz.attemptsCount ?? 0) >= 2) ? 'Limite atteinte (2/2)' : (quiz.hasAttempted ? 'Repasser le quiz (' + (quiz.attemptsCount ?? 0) + '/2)' : 'Commencer le quiz') }}
+                </span>
               </button>
             </div>
           </div>
@@ -154,7 +232,7 @@
         </h2>
 
         <div *ngIf="exams.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div *ngFor="let exam of exams; let i = index" 
+          <div *ngFor="let exam of displayedExams; let i = index" 
                class="exam-card bg-white rounded-2xl shadow-lg overflow-hidden animate-scale-in"
                [class.stagger-1]="i % 6 === 0"
                [class.stagger-2]="i % 6 === 1"
@@ -225,16 +303,16 @@
 
               <!-- Action Button -->
               <button 
-                (click)="startExam(exam)"
-                [disabled]="exam.isLocked"
-                [class.opacity-50]="exam.isLocked"
-                [class.cursor-not-allowed]="exam.isLocked"
+                (click)="exam.hasAttempted ? retakeExam(exam) : startExam(exam)"
+                [disabled]="exam.isLocked || ((exam.attemptsCount ?? 0) >= 2)"
+                [class.opacity-50]="exam.isLocked || ((exam.attemptsCount ?? 0) >= 2)"
+                [class.cursor-not-allowed]="exam.isLocked || ((exam.attemptsCount ?? 0) >= 2)"
                 class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-6 rounded-xl font-semibold hover:shadow-xl transition-all duration-300 flex items-center justify-center transform hover:scale-105 disabled:transform-none disabled:hover:shadow-none">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                {{ exam.hasAttempted ? 'Repasser l\'examen' : 'Commencer l\'examen' }}
+                {{ ((exam.attemptsCount ?? 0) >= 2) ? 'Limite atteinte (2/2)' : (exam.hasAttempted ? 'Repasser l\'examen (' + (exam.attemptsCount ?? 0) + '/2)' : 'Commencer l\'examen') }}
               </button>
             </div>
           </div>

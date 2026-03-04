@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { ExamService } from '../../../core/services/exam.service';
 import { CourseService } from '../../../core/services/course.service';
 import { TrainingService } from '../../../core/services/training.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Exam, Question, QuestionOption } from '../../../core/models/exam.model';
 import { Course } from '../../../core/models/course.model';
 import { Training } from '../../../core/models/training.model';
@@ -12,12 +13,13 @@ import { PageHeaderComponent } from '../../../shared/page-header/page-header.com
 @Component({
   selector: 'app-trainer-exams',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, PageHeaderComponent],
   templateUrl: './trainer-exams.component.html',
   styleUrl: './trainer-exams.component.scss'
 })
 export class TrainerExamsComponent implements OnInit {
   exams: Exam[] = [];
+  filteredExams: Exam[] = [];
   courses: Course[] = [];
   trainings: Training[] = [];
   examForm: FormGroup;
@@ -27,11 +29,17 @@ export class TrainerExamsComponent implements OnInit {
   loading = false;
   currentStep: 'info' | 'questions' = 'info';
 
+  // Recherche et tri
+  searchTerm: string = '';
+  sortBy: 'name' | 'type' | 'questions' = 'name';
+  sortOrder: 'asc' | 'desc' = 'asc';
+
   constructor(
     private fb: FormBuilder,
     private examService: ExamService,
     private courseService: CourseService,
-    private trainingService: TrainingService
+    private trainingService: TrainingService,
+    private authService: AuthService
   ) {
     this.examForm = this.fb.group({
       courseId: [null],
@@ -89,12 +97,64 @@ export class TrainerExamsComponent implements OnInit {
       next: (data) => {
         this.exams = data;
         this.loading = false;
+        this.applyFiltersAndSort();
       },
       error: (error) => {
         console.error('Error loading exams:', error);
         this.loading = false;
       }
     });
+  }
+
+  // Recherche et tri
+  onSearchChange(term: string): void {
+    this.searchTerm = term;
+    this.applyFiltersAndSort();
+  }
+
+  onSortChange(sortBy: 'name' | 'type' | 'questions'): void {
+    if (this.sortBy === sortBy) {
+      this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortBy = sortBy;
+      this.sortOrder = 'asc';
+    }
+    this.applyFiltersAndSort();
+  }
+
+  applyFiltersAndSort(): void {
+    // Filtrer par recherche
+    let filtered = this.exams.filter(e => 
+      e.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+      (e.description && e.description.toLowerCase().includes(this.searchTerm.toLowerCase()))
+    );
+
+    // Trier
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (this.sortBy) {
+        case 'name':
+          comparison = a.title.localeCompare(b.title);
+          break;
+        case 'type':
+          comparison = a.examType.localeCompare(b.examType);
+          break;
+        case 'questions':
+          const questionsA = a.questions?.length || 0;
+          const questionsB = b.questions?.length || 0;
+          comparison = questionsA - questionsB;
+          break;
+      }
+      
+      return this.sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    this.filteredExams = filtered;
+  }
+
+  get displayedExams(): Exam[] {
+    return this.filteredExams.length > 0 || this.searchTerm ? this.filteredExams : this.exams;
   }
 
   loadCourses(): void {
@@ -180,6 +240,10 @@ export class TrainerExamsComponent implements OnInit {
     this.loading = true;
     const formValue = this.examForm.value;
     
+    // Récupérer l'ID du trainer connecté
+    const userInfo = this.authService.getUserInfo();
+    const trainerId = userInfo?.userId;
+    
     // Préparer les données pour le backend (ExamRequest)
     const examData: any = {
       courseId: formValue.courseId,
@@ -193,7 +257,8 @@ export class TrainerExamsComponent implements OnInit {
       startDate: formValue.startDate,
       endDate: formValue.endDate,
       isActive: formValue.isActive,
-      questions: formValue.questions
+      questions: formValue.questions,
+      createdBy: trainerId // Ajouter l'ID du trainer
     };
 
     const operation = this.isEditMode && this.selectedExamId

@@ -70,6 +70,13 @@ public class CourseCompletionController {
         return ResponseEntity.ok(isCompleted);
     }
     
+    @GetMapping("/completed-count")
+    public ResponseEntity<Integer> getCompletedCoursesCount(@RequestParam Long userId) {
+        int count = courseCompletionRepository.countByUserId(userId);
+        log.info("Utilisateur {} a complété {} cours", userId, count);
+        return ResponseEntity.ok(count);
+    }
+    
     @DeleteMapping("/{courseId}/uncomplete")
     public ResponseEntity<String> uncompleteCourse(
             @PathVariable Long courseId,

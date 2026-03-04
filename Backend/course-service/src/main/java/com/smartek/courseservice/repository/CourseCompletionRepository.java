@@ -18,4 +18,6 @@ public interface CourseCompletionRepository extends JpaRepository<CourseCompleti
     boolean existsByUserIdAndCourseId(Long userId, Long courseId);
     
     long countByUserIdAndCourseIdIn(Long userId, List<Long> courseIds);
+    
+    int countByUserId(Long userId);
 }

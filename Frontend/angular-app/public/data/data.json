@@ -9,12 +9,12 @@
             "href": "/#Courses"
         },
         {
-            "label": "Mentors",
-            "href": "/#mentors-section"
+            "label": "Planning",
+            "href": "/#planning-section"
         },
         {
-            "label": "Testimonial",
-            "href": "/#testimonial-section"
+            "label": "Events",
+            "href": "/#events-section"
         },
         {
             "label": "Join",
@@ -274,12 +274,12 @@
                     "href": "/#Courses"
                 },
                 {
-                    "label": "Mentors",
-                    "href": "/#mentors-section"
+                    "label": "Planning",
+                    "href": "/#planning-section"
                 },
                 {
-                    "label": "Testimonial",
-                    "href": "/#testimonial-section"
+                    "label": "Events",
+                    "href": "/#events-section"
                 },
                 {
                     "label": "Join",

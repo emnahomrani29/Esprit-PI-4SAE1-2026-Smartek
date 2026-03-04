@@ -44,6 +44,14 @@ public class ExamEnrollment {
     
     private LocalDateTime unlockedAt;
     
+    private LocalDateTime startedAt;
+    
+    private LocalDateTime pausedAt;
+    
+    @Column(name = "time_spent_seconds")
+    @Builder.Default
+    private Integer timeSpentSeconds = 0;
+    
     private LocalDateTime completedAt;
     
     @Column(nullable = false, updatable = false)

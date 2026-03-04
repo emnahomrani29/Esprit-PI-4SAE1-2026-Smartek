@@ -27,7 +27,7 @@ export interface Exam {
   attemptsCount?: number;
   courseName?: string;
   trainingName?: string;
-  remainingTimeMinutes?: number; // Temps restant en minutes avant la fin de l'examen
+  remainingTimeMinutes?: number;
 }
 
 export interface Question {

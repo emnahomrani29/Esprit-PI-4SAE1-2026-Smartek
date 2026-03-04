@@ -36,6 +36,7 @@ export interface TrainingCreateRequest {
   level: string;
   duration: string;
   courseIds?: number[];
+  createdBy?: number;
 }
 
 export interface TrainingUpdateRequest {

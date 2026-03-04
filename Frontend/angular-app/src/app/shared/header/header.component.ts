@@ -104,6 +104,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.navbarOpen = !this.navbarOpen;
   }
 
+  toggleMobileMenu(): void {
+    this.navbarOpen = !this.navbarOpen;
+  }
+
   toggleUserMenu(): void {
     this.userMenuOpen = !this.userMenuOpen;
   }
@@ -124,7 +128,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   goToDashboard(): void {
     this.userMenuOpen = false;
-    this.router.navigate(['/dashboard']);
+    if (this.isRhCompany()) {
+      this.router.navigate(['/rh-company/dashboard']);
+    } else {
+      this.router.navigate(['/dashboard']);
+    }
   }
 
   goToSettings(): void {
@@ -134,7 +142,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   logout(): void {
     this.userMenuOpen = false;
-    this.authService.logout('/'); // Rediriger vers la page d'accueil (frontoffice)
+    this.authService.logout();
     this.currentUser = null;
   }
 
@@ -152,6 +160,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   isAdmin(): boolean {
     return this.currentUser?.role === 'ADMIN';
+  }
+
+  isRhCompany(): boolean {
+    return this.currentUser?.role === 'RH_COMPANY';
+  }
+
+  isRhSmartek(): boolean {
+    return this.currentUser?.role === 'RH_SMARTEK';
   }
 
   getUserInitial(): string {

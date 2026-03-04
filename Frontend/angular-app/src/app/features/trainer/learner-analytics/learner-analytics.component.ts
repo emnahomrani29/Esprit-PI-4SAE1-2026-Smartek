@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PageHeaderComponent } from '../../../shared/page-header/page-header.component';
-import { AnalyticsService } from '../../../core/services/analytics.service';
+import { AnalyticsService, ExamAnalytics, TrainingAnalytics } from '../../../core/services/analytics.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { ExamAnalytics, TrainingAnalytics } from '../../../core/models/analytics.model';
 
 @Component({
   selector: 'app-learner-analytics',
@@ -39,11 +38,11 @@ export class LearnerAnalyticsComponent implements OnInit {
     
     // Charger les résultats d'examens
     this.analyticsService.getTrainerExamAnalytics(this.trainerId).subscribe({
-      next: (data) => {
+      next: (data: ExamAnalytics[]) => {
         this.examResults = data;
         this.loading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error loading exam analytics:', error);
         this.loading = false;
       }
@@ -51,10 +50,10 @@ export class LearnerAnalyticsComponent implements OnInit {
     
     // Charger les inscriptions aux formations
     this.analyticsService.getTrainerTrainingAnalytics(this.trainerId).subscribe({
-      next: (data) => {
+      next: (data: TrainingAnalytics[]) => {
         this.trainingEnrollments = data;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error loading training analytics:', error);
       }
     });

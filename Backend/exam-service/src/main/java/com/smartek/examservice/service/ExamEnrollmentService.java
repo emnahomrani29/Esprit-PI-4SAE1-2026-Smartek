@@ -456,4 +456,153 @@ public class ExamEnrollmentService {
         
         return response;
     }
+    
+    @Transactional
+    public void startExam(Long userId, Long examId) {
+        log.info("Démarrage de l'examen {} pour l'utilisateur {}", examId, userId);
+        
+        ExamEnrollment enrollment = examEnrollmentRepository
+                .findByUserIdAndExamId(userId, examId)
+                .orElseThrow(() -> new RuntimeException("Enrollment non trouvé"));
+        
+        // Vérifier si l'examen est déverrouillé
+        if (!enrollment.getIsUnlocked()) {
+            throw new RuntimeException("Cet examen est verrouillé");
+        }
+        
+        // Marquer le début de l'examen
+        if (enrollment.getStartedAt() == null) {
+            enrollment.setStartedAt(LocalDateTime.now());
+            enrollment.setPausedAt(null);
+            enrollment.setTimeSpentSeconds(0);
+            examEnrollmentRepository.save(enrollment);
+            log.info("Examen {} démarré à {} pour l'utilisateur {}", examId, enrollment.getStartedAt(), userId);
+        } else if (enrollment.getPausedAt() != null) {
+            // Si l'examen était en pause, le reprendre
+            resumeExam(userId, examId);
+        }
+    }
+    
+    @Transactional
+    public void pauseExam(Long userId, Long examId) {
+        log.info("Mise en pause de l'examen {} pour l'utilisateur {}", examId, userId);
+        
+        ExamEnrollment enrollment = examEnrollmentRepository
+                .findByUserIdAndExamId(userId, examId)
+                .orElseThrow(() -> new RuntimeException("Enrollment non trouvé"));
+        
+        // Si l'examen est en cours (pas en pause)
+        if (enrollment.getStartedAt() != null && enrollment.getPausedAt() == null) {
+            LocalDateTime now = LocalDateTime.now();
+            
+            // Calculer le temps écoulé depuis le dernier démarrage/reprise
+            long secondsElapsed = java.time.Duration.between(enrollment.getStartedAt(), now).getSeconds();
+            
+            // Ajouter au temps total passé
+            int currentTimeSpent = enrollment.getTimeSpentSeconds() != null ? enrollment.getTimeSpentSeconds() : 0;
+            enrollment.setTimeSpentSeconds((int) (currentTimeSpent + secondsElapsed));
+            
+            // Marquer comme en pause
+            enrollment.setPausedAt(now);
+            
+            examEnrollmentRepository.save(enrollment);
+            log.info("Examen {} mis en pause. Temps total passé: {} secondes", examId, enrollment.getTimeSpentSeconds());
+        }
+    }
+    
+    @Transactional
+    public void resumeExam(Long userId, Long examId) {
+        log.info("Reprise de l'examen {} pour l'utilisateur {}", examId, userId);
+        
+        ExamEnrollment enrollment = examEnrollmentRepository
+                .findByUserIdAndExamId(userId, examId)
+                .orElseThrow(() -> new RuntimeException("Enrollment non trouvé"));
+        
+        // Si l'examen était en pause
+        if (enrollment.getPausedAt() != null) {
+            // Redémarrer le compteur
+            enrollment.setStartedAt(LocalDateTime.now());
+            enrollment.setPausedAt(null);
+            
+            examEnrollmentRepository.save(enrollment);
+            log.info("Examen {} repris pour l'utilisateur {}", examId, userId);
+        }
+    }
+    
+    @Transactional
+    public void retakeExam(Long userId, Long examId) {
+        log.info("Reprise de l'examen {} pour l'utilisateur {}", examId, userId);
+        
+        ExamEnrollment enrollment = examEnrollmentRepository
+                .findByUserIdAndExamId(userId, examId)
+                .orElseThrow(() -> new RuntimeException("Enrollment non trouvé"));
+        
+        // Vérifier si l'examen est déverrouillé
+        if (!enrollment.getIsUnlocked()) {
+            throw new RuntimeException("Cet examen est verrouillé");
+        }
+        
+        // Compter TOUS les résultats existants
+        List<ExamResult> allResults = examResultRepository.findByExamIdAndUserId(examId, userId);
+        int totalAttempts = allResults.size();
+        
+        log.info("Nombre total de tentatives existantes: {}", totalAttempts);
+        
+        // Limiter à 2 tentatives maximum
+        // Si l'utilisateur a déjà 2 résultats ou plus, bloquer
+        if (totalAttempts >= 2) {
+            throw new RuntimeException("Vous avez déjà utilisé votre tentative de reprise. Nombre maximum de tentatives atteint (2).");
+        }
+        
+        // Si on arrive ici, c'est qu'il a 0 ou 1 tentative
+        // On réinitialise juste l'enrollment pour permettre une nouvelle tentative
+        // SANS supprimer les anciens résultats (pour garder l'historique)
+        
+        enrollment.setIsCompleted(false);
+        enrollment.setCompletedAt(null);
+        enrollment.setStartedAt(null);
+        enrollment.setPausedAt(null);
+        enrollment.setTimeSpentSeconds(0);
+        examEnrollmentRepository.save(enrollment);
+        
+        log.info("Examen {} réinitialisé pour l'utilisateur {} (ce sera la tentative {} sur 2)", 
+                examId, userId, totalAttempts + 1);
+    }
+    
+    public int getTimeRemaining(Long userId, Long examId) {
+        log.info("Calcul du temps restant pour l'examen {} et l'utilisateur {}", examId, userId);
+        
+        Exam exam = examRepository.findById(examId)
+                .orElseThrow(() -> new RuntimeException("Examen non trouvé"));
+        
+        ExamEnrollment enrollment = examEnrollmentRepository
+                .findByUserIdAndExamId(userId, examId)
+                .orElseThrow(() -> new RuntimeException("Enrollment non trouvé"));
+        
+        int totalSeconds = exam.getDuration() * 60;
+        
+        // Si l'examen n'a pas encore été démarré, retourner la durée totale
+        if (enrollment.getStartedAt() == null) {
+            return totalSeconds;
+        }
+        
+        int timeSpent = enrollment.getTimeSpentSeconds() != null ? enrollment.getTimeSpentSeconds() : 0;
+        
+        // Si l'examen est en pause, utiliser le temps déjà passé
+        if (enrollment.getPausedAt() != null) {
+            int timeRemaining = totalSeconds - timeSpent;
+            log.info("Examen en pause. Temps passé: {} secondes, Temps restant: {} secondes", timeSpent, timeRemaining);
+            return Math.max(0, timeRemaining);
+        }
+        
+        // Si l'examen est en cours, calculer le temps écoulé depuis le dernier démarrage/reprise
+        LocalDateTime now = LocalDateTime.now();
+        long secondsSinceStart = java.time.Duration.between(enrollment.getStartedAt(), now).getSeconds();
+        
+        int totalTimeSpent = (int) (timeSpent + secondsSinceStart);
+        int timeRemaining = totalSeconds - totalTimeSpent;
+        
+        log.info("Temps total passé: {} secondes, Temps restant: {} secondes", totalTimeSpent, timeRemaining);
+        return Math.max(0, timeRemaining);
+    }
 }

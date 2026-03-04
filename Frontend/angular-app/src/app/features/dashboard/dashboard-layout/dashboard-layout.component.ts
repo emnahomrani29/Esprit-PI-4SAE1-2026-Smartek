@@ -14,6 +14,6 @@ export class DashboardLayoutComponent {
   constructor(private authService: AuthService) {}
 
   logout(): void {
-    this.authService.logout('/'); // Rediriger vers la page d'accueil après logout
+    this.authService.logout();
   }
 }

@@ -1,20 +1,28 @@
+export interface LearnerAnalytics {
+  learnerId: number;
+  learnerName: string;
+  totalCourses: number;
+  completedCourses: number;
+  totalExams: number;
+  passedExams: number;
+  averageScore: number;
+}
+
+export interface TrainingAnalytics {
+  trainingId: number;
+  trainingName: string;
+  totalLearners: number;
+  completedLearners: number;
+  averageProgress: number;
+  averageScore: number;
+}
+
 export interface ExamAnalytics {
   examId: number;
   examTitle: string;
   learnerId: number;
   learnerName: string;
-  learnerEmail: string;
   score: number;
-  maxScore: number;
-  percentage: number;
-  status: 'passed' | 'failed';
-  completedAt: Date;
-}
-
-export interface TrainingAnalytics {
-  trainingId: number;
-  trainingTitle: string;
-  totalEnrollments: number;
-  activeEnrollments: number;
-  completedEnrollments: number;
+  status: string;
+  submittedAt: string;
 }

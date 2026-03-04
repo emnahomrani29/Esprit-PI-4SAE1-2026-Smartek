@@ -33,6 +33,82 @@
       </div>
     </div>
 
+    <!-- Barre de recherche et tri -->
+    <div *ngIf="!isLoading && trainingsWithCourses.length > 0" class="mb-8 bg-white rounded-2xl shadow-lg p-6 animate-fade-in">
+      <div class="flex flex-col md:flex-row gap-4">
+        <!-- Recherche -->
+        <div class="flex-1">
+          <div class="relative">
+            <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input
+              type="text"
+              [(ngModel)]="searchTerm"
+              (ngModelChange)="onSearchChange($event)"
+              placeholder="Rechercher une formation ou un cours..."
+              class="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors">
+          </div>
+        </div>
+
+        <!-- Tri -->
+        <div class="flex gap-2">
+          <button
+            (click)="onSortChange('name')"
+            [class.bg-blue-600]="sortBy === 'name'"
+            [class.text-white]="sortBy === 'name'"
+            [class.bg-gray-100]="sortBy !== 'name'"
+            [class.text-gray-700]="sortBy !== 'name'"
+            class="px-4 py-3 rounded-xl font-semibold transition-all hover:shadow-md flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
+            </svg>
+            Nom
+            <svg *ngIf="sortBy === 'name'" class="w-4 h-4" [class.rotate-180]="sortOrder === 'desc'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+            </svg>
+          </button>
+
+          <button
+            (click)="onSortChange('progress')"
+            [class.bg-blue-600]="sortBy === 'progress'"
+            [class.text-white]="sortBy === 'progress'"
+            [class.bg-gray-100]="sortBy !== 'progress'"
+            [class.text-gray-700]="sortBy !== 'progress'"
+            class="px-4 py-3 rounded-xl font-semibold transition-all hover:shadow-md flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            Progrès
+            <svg *ngIf="sortBy === 'progress'" class="w-4 h-4" [class.rotate-180]="sortOrder === 'desc'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+            </svg>
+          </button>
+
+          <button
+            (click)="onSortChange('date')"
+            [class.bg-blue-600]="sortBy === 'date'"
+            [class.text-white]="sortBy === 'date'"
+            [class.bg-gray-100]="sortBy !== 'date'"
+            [class.text-gray-700]="sortBy !== 'date'"
+            class="px-4 py-3 rounded-xl font-semibold transition-all hover:shadow-md flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            Date
+            <svg *ngIf="sortBy === 'date'" class="w-4 h-4" [class.rotate-180]="sortOrder === 'desc'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Résultats de recherche -->
+      <div *ngIf="searchTerm" class="mt-4 text-sm text-gray-600">
+        {{ displayedTrainings.length }} résultat(s) trouvé(s)
+      </div>
+    </div>
+
     <!-- Loading State -->
     <div *ngIf="isLoading" class="flex justify-center items-center py-20 animate-fade-in">
       <div class="relative">
@@ -57,7 +133,7 @@
 
     <!-- Trainings with Courses -->
     <div *ngIf="!isLoading && !errorMessage && trainingsWithCourses.length > 0" class="space-y-12">
-      <div *ngFor="let trainingData of trainingsWithCourses; let i = index" 
+      <div *ngFor="let trainingData of displayedTrainings; let i = index" 
            class="animate-fade-in-up"
            [class.stagger-1]="i % 3 === 0"
            [class.stagger-2]="i % 3 === 1"
